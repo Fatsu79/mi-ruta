@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'clients/clients_screen.dart';
+
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -9,6 +11,14 @@ class HomeScreen extends StatelessWidget {
     (label: 'Rutas', icon: Icons.route_outlined),
     (label: 'Entregas', icon: Icons.local_shipping_outlined),
   ];
+
+  void _openSection(BuildContext context, String label) {
+    if (label == 'Clientes') {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (context) => const ClientsScreen()),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +40,7 @@ class HomeScreen extends StatelessWidget {
             return Card(
               clipBehavior: Clip.antiAlias,
               child: InkWell(
-                onTap: () {},
+                onTap: () => _openSection(context, section.label),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
