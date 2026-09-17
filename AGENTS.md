@@ -123,7 +123,7 @@ Planificado:
 
 No integrarlos hasta que se solicite explícitamente.
 
-La decisión de qué cliente visitar es lógica propia de Mi Ruta.
+La planificación de entregas y el orden de las paradas son lógica propia de Mi Ruta.
 
 ## 12. Estado actual
 
@@ -132,13 +132,25 @@ Implementado:
 - Android.
 - Login visual sin auth real.
 - Home con Clientes, Pedidos, Rutas y Entregas.
+- Clientes v1: listado, búsqueda, alta con un contacto y detalle con datos de ejemplo en memoria.
+- Modelos `Client`, `Contact` y `Purchase`; visualización básica de compras de ejemplo.
 - Tests básicos.
 - Git/GitHub.
 
-Próximo módulo:
-**Clientes**.
+Prioridad de desarrollo (todavía no implementada):
+1. Clientes v1.1: edición, múltiples contactos y horario de recepción/entrega.
+2. Pedidos v1: referencias a facturas, relación con clientes, estados, consulta e historial.
+3. Rutas v1: selección de pedidos que requieren entrega y planificación con información actualizada del cliente.
 
-## 13. Módulo Clientes — dirección inicial
+Las tarjetas de Pedidos, Rutas y Entregas aún no implementan esos módulos.
+
+## 13. Clientes y dirección operativa
+
+Mi Ruta prioriza la planificación y ejecución de entregas. No reemplaza el sistema de facturación ni es un sistema completo de ventas.
+
+Flujo conceptual: Factura física → Pedido en Mi Ruta → Cliente → Ruta → Entrega.
+
+El Pedido será principalmente una referencia a la factura física y una unidad operativa para seguimiento, planificación de rutas y entrega. No duplicar innecesariamente la factura: productos, cantidades, precios, impuestos y demás contenido quedan fuera del alcance actual.
 
 ### Cliente
 - id.
@@ -153,7 +165,8 @@ Próximo módulo:
 - tiene crédito.
 - observaciones.
 - contactos.
-- compras.
+- horario de recepción/entrega estructurado por día de la semana (planificado).
+- compras existentes únicamente como compatibilidad temporal.
 
 ### Contacto
 - nombre.
@@ -161,10 +174,24 @@ Próximo módulo:
 - teléfono.
 - correo.
 
-### Compra
+### Compra (temporal)
 - fecha.
 - monto.
 - número de factura opcional.
+
+Mantener `Purchase` temporalmente sin ampliar su funcionalidad ni convertirlo en Pedido. La prioridad futura es el historial de pedidos/facturas.
+
+### Clientes v1.1 (planificado)
+- Editar sin perder ID, coordenadas, contactos ni compras existentes.
+- Agregar y mostrar múltiples contactos.
+- Horario semanal separado de observaciones: desconocido, no recibe o intervalo de recepción.
+- Mantener los datos solo en memoria; actualmente se pierden al salir del módulo y volver a entrar.
+
+### Decisiones pendientes para Pedidos v1
+- No asumir que el folio de factura es globalmente único; definir identificación y duplicados.
+- Definir tratamiento de entregas fallidas y reprogramaciones; una entrega fallida no equivale a cancelar el pedido.
+- Usar pedidos que requieren entrega para planificar rutas, sin fijar todavía estados elegibles ni reglas exactas.
+- Estados base propuestos: Pendiente, Programado, En ruta, Entregado y Cancelado. No agregar otros sin necesidad funcional definida.
 
 Primera versión:
 - Listado.
@@ -179,6 +206,10 @@ Todavía NO:
 - API.
 - Maps.
 - Auth real.
+- Sincronización offline.
+- Módulo Pedidos sin solicitud y diseño aprobados.
+
+Mantener la aplicación ligera para una gama amplia de dispositivos Android compatibles, sin dependencias ni optimizaciones complejas innecesarias.
 
 ## 14. Regla principal
 

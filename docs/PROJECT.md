@@ -2,9 +2,13 @@
 
 ## 1. Visión general
 
-**Mi Ruta** es una aplicación móvil orientada a vendedores, administradores y choferes que necesitan gestionar clientes, pedidos, entregas y rutas de visita o reparto.
+**Mi Ruta** es una aplicación móvil orientada a vendedores, administradores y choferes, enfocada principalmente en planificar y ejecutar rutas para la entrega de pedidos.
 
-El proyecto nace de una necesidad operativa real: contar con una herramienta sencilla para registrar clientes, consultar su información, revisar historial de compras, organizar pedidos y generar rutas eficientes, incluyendo escenarios con conectividad limitada.
+El flujo operativo parte de facturas físicas, que permiten identificar folio, cliente y contenido por entregar. Mi Ruta mantendrá información operativa actualizada de los clientes y permitirá dar seguimiento a pedidos/facturas, planificar rutas y registrar entregas, incluyendo escenarios futuros con conectividad limitada.
+
+Flujo conceptual: **Factura física → Pedido en Mi Ruta → Cliente → Ruta → Entrega**.
+
+Mi Ruta no pretende reemplazar el sistema de facturación ni convertirse en un sistema completo de ventas. El Pedido será principalmente una referencia a la factura física y una unidad operativa para seguimiento, planificación de rutas y entrega. No se duplicará innecesariamente su información: productos, cantidades, precios, impuestos y demás contenido de la factura quedan fuera del alcance actual.
 
 La primera plataforma objetivo es **Android**.
 
@@ -12,14 +16,15 @@ La primera plataforma objetivo es **Android**.
 
 Mi Ruta busca centralizar en una sola aplicación:
 
-- Información de clientes.
+- Información operativa actualizada de clientes, independiente de datos incompletos o desactualizados en las facturas.
 - Contactos comerciales.
 - Condiciones comerciales.
-- Historial de compras.
+- Horarios de recepción/entrega.
+- Historial de pedidos/facturas, consultable por folio, fecha y estado.
 - Pedidos.
 - Entregas.
 - Ubicaciones geográficas.
-- Rutas de visita/reparto.
+- Planificación y ejecución de rutas de entrega.
 - Operación offline.
 - Sincronización cuando vuelve la conexión.
 
@@ -29,20 +34,22 @@ Mi Ruta busca centralizar en una sola aplicación:
 Puede administrar usuarios, clientes, pedidos, rutas y configuraciones.
 
 ### Vendedor
-Puede registrar y consultar clientes, registrar compras, crear pedidos, consultar historial y generar rutas.
+Podrá registrar y consultar clientes, registrar pedidos referenciados por factura, consultar su historial y planificar rutas de entrega.
 
 ### Chofer
 Puede consultar su ruta, clientes asignados, pedidos, ubicaciones, contactos y estado de entregas.
 
 > Un mismo usuario puede tener **más de un rol**.
 
-## 4. Alcance inicial
+## 4. Alcance funcional objetivo
+
+Esta lista no implica que todas las funcionalidades estén implementadas.
 
 - Inicio de sesión.
 - Usuarios y roles.
-- Clientes y contactos.
-- Historial de compras.
-- Pedidos.
+- Clientes, múltiples contactos y horarios estructurados.
+- Pedidos como referencias operativas a facturas físicas, relacionados con clientes.
+- Historial de pedidos/facturas.
 - Rutas y entregas.
 - Ubicaciones.
 - Operación offline.
@@ -56,6 +63,9 @@ Puede consultar su ruta, clientes asignados, pedidos, ubicaciones, contactos y e
 - Aplicación ejecutándose en Android.
 - Login visual sin autenticación real.
 - Pantalla principal con Clientes, Pedidos, Rutas y Entregas.
+- Clientes v1: listado, búsqueda, alta con un contacto y detalle; datos de ejemplo y altas únicamente en memoria, que se pierden al salir del módulo y volver a entrar.
+- Modelos `Client`, `Contact` y `Purchase`, con visualización básica de compras de ejemplo.
+- Pruebas básicas de login → Home, Home → Clientes y apertura del formulario.
 - Git y GitHub configurados.
 - Emulador Android 16 / API 36 funcionando.
 
@@ -67,8 +77,16 @@ Puede consultar su ruta, clientes asignados, pedidos, ubicaciones, contactos y e
 - Base de desarrollo `mi_ruta_dev`.
 - Codex en VS Code.
 
-### Próximo módulo
-**Clientes**
+### Próximos incrementos (no implementados)
+1. **Clientes v1.1:** editar sin perder datos existentes, múltiples contactos y horario semanal de recepción/entrega; solo en memoria.
+2. **Pedidos v1:** registro por folio de factura, relación con clientes, estados, consulta e historial.
+3. **Rutas v1:** planificación de entregas usando pedidos que requieren entrega y ubicación, contactos y horarios actualizados del cliente.
+
+Las reglas exactas para incorporar pedidos a una ruta se definirán al diseñar Pedidos v1, sin restringir todavía su selección a estados específicos. También quedan pendientes las reglas de identificación/duplicados del folio y el tratamiento de entregas fallidas/reprogramaciones.
+
+`Purchase` permanece temporalmente sin ampliar su funcionalidad. Se suspende el desarrollo de registro de compras, compras recientes e historial completo de compras.
+
+Las tarjetas de Pedidos, Rutas y Entregas no tienen todavía funcionalidad. Persistencia, API, autenticación real, mapas y sincronización siguen siendo objetivos futuros, no parte del incremento actual.
 
 ## 6. Tecnologías principales
 
@@ -95,6 +113,8 @@ Puede consultar su ruta, clientes asignados, pedidos, ubicaciones, contactos y e
 8. Priorizar aprendizaje y comprensión.
 9. Evitar dependencias innecesarias.
 10. Diseñar pensando en conectividad limitada.
+11. Mantener la aplicación ligera para una gama amplia de dispositivos Android compatibles.
+12. Distinguir horario desconocido de días en que el cliente no recibe; el horario no sustituye a las observaciones.
 
 ## 8. Flujo de desarrollo
 
