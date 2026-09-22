@@ -1,11 +1,74 @@
 import 'package:flutter/material.dart';
 
 import '../../models/client.dart';
+import '../../models/contact.dart';
+import '../../models/reception_day.dart';
+import 'client_form_screen.dart';
+import 'contact_form_screen.dart';
 
-class ClientDetailScreen extends StatelessWidget {
-  const ClientDetailScreen({required this.client, super.key});
+class ClientDetailScreen extends StatefulWidget {
+  const ClientDetailScreen({
+    required this.client,
+    required this.onClientUpdated,
+    super.key,
+  });
 
   final Client client;
+  final ValueChanged<Client> onClientUpdated;
+
+  @override
+  State<ClientDetailScreen> createState() => _ClientDetailScreenState();
+}
+
+class _ClientDetailScreenState extends State<ClientDetailScreen> {
+  late Client client;
+
+  @override
+  void initState() {
+    super.initState();
+    client = widget.client;
+  }
+
+  void _update(Client updated) {
+    setState(() => client = updated);
+    widget.onClientUpdated(updated);
+  }
+
+  Future<void> _edit() async {
+    final updated = await Navigator.of(context).push<Client>(
+      MaterialPageRoute(builder: (_) => ClientFormScreen(client: client)),
+    );
+    if (updated != null && mounted) _update(updated);
+  }
+
+  Future<void> _addContact() async {
+    final contact = await Navigator.of(context).push<Contact>(
+      MaterialPageRoute(builder: (_) => const ContactFormScreen()),
+    );
+    if (contact != null && mounted) {
+      _update(client.copyWith(contacts: [...client.contacts, contact]));
+    }
+  }
+
+  static const _days = [
+    'Lunes',
+    'Martes',
+    'Miércoles',
+    'Jueves',
+    'Viernes',
+    'Sábado',
+    'Domingo',
+  ];
+
+  String _time(int minutes) =>
+      '${(minutes ~/ 60).toString().padLeft(2, '0')}:${(minutes % 60).toString().padLeft(2, '0')}';
+
+  String _scheduleText(ReceptionDay day) => switch (day.status) {
+    ReceptionStatus.unknown => 'Sin definir',
+    ReceptionStatus.closed => 'No recibe',
+    ReceptionStatus.open =>
+      '${_time(day.startMinutes!)} - ${_time(day.endMinutes!)}',
+  };
 
   String _date(DateTime value) {
     final day = value.day.toString().padLeft(2, '0');
@@ -20,6 +83,14 @@ class ClientDetailScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: OutlinedButton.icon(
+              onPressed: _edit,
+              icon: const Icon(Icons.edit_outlined),
+              label: const Text('Editar cliente'),
+            ),
+          ),
           _Section(
             title: 'Datos generales',
             children: [
@@ -28,28 +99,48 @@ class ClientDetailScreen extends StatelessWidget {
             ],
           ),
           _Section(
-            title: 'Contacto',
-            children: client.contacts.isEmpty
-                ? const [Text('Sin contactos registrados')]
-                : client.contacts
-                      .map(
-                        (contact) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _Detail(label: 'Nombre', value: contact.name),
-                              _Detail(
-                                label: 'Puesto/área',
-                                value: contact.position,
-                              ),
-                              _Detail(label: 'Teléfono', value: contact.phone),
-                              _Detail(label: 'Correo', value: contact.email),
-                            ],
+            title: 'Contactos',
+            children: [
+              ...(client.contacts.isEmpty
+                  ? const [Text('Sin contactos registrados')]
+                  : client.contacts
+                        .map(
+                          (contact) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _Detail(label: 'Nombre', value: contact.name),
+                                _Detail(
+                                  label: 'Puesto/área',
+                                  value: contact.position,
+                                ),
+                                _Detail(
+                                  label: 'Teléfono',
+                                  value: contact.phone,
+                                ),
+                                _Detail(label: 'Correo', value: contact.email),
+                              ],
+                            ),
                           ),
-                        ),
-                      )
-                      .toList(),
+                        )
+                        .toList()),
+              OutlinedButton.icon(
+                onPressed: _addContact,
+                icon: const Icon(Icons.person_add_outlined),
+                label: const Text('Agregar contacto'),
+              ),
+            ],
+          ),
+          _Section(
+            title: 'Horario de recepción de entregas',
+            children: [
+              for (final day in client.receptionSchedule)
+                _Detail(
+                  label: _days[day.weekday - 1],
+                  value: _scheduleText(day),
+                ),
+            ],
           ),
           _Section(
             title: 'Ubicación',

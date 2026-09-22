@@ -45,7 +45,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
         Purchase(date: DateTime(2026, 7, 28), amount: 1875.50),
       ],
     ),
-    const Client(
+    Client(
       id: '2',
       commercialName: 'Papelería Central',
       businessName: 'Papelería Central de Occidente',
@@ -96,7 +96,14 @@ class _ClientsScreenState extends State<ClientsScreen> {
   void _openDetail(Client client) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) => ClientDetailScreen(client: client),
+        builder: (context) => ClientDetailScreen(
+          client: client,
+          onClientUpdated: (updated) {
+            if (!mounted) return;
+            final index = _clients.indexWhere((item) => item.id == updated.id);
+            if (index != -1) setState(() => _clients[index] = updated);
+          },
+        ),
       ),
     );
   }
