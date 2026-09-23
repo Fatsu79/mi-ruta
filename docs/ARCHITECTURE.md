@@ -44,7 +44,7 @@ Responsabilidades:
 - Mapas.
 - Consumo de API.
 
-## 4. Estructura Flutter inicial
+## 4. Estructura Flutter actual relevante
 
 ```text
 lib/
@@ -52,19 +52,30 @@ lib/
 ├── models/
 │   ├── client.dart
 │   ├── contact.dart
-│   └── purchase.dart
+│   ├── purchase.dart
+│   └── reception_day.dart
 └── screens/
     ├── login_screen.dart
     ├── home_screen.dart
     └── clients/
         ├── clients_screen.dart
         ├── client_form_screen.dart
-        └── client_detail_screen.dart
+        ├── client_detail_screen.dart
+        ├── contact_form_screen.dart
+        └── widgets/
+            └── reception_schedule_editor.dart
+test/
+├── widget_test.dart
+├── models/
+│   ├── client_test.dart
+│   └── reception_day_test.dart
+└── screens/
+    └── clients_v11_test.dart
 ```
 
 Mantenerla simple. No introducir arquitectura compleja sin necesidad.
 
-La estructura mostrada corresponde a Clientes v1 existente. Clientes v1.1 está planificado, no implementado.
+La estructura corresponde a Clientes v1.1 implementado y probado.
 
 ## 5. Modelos
 
@@ -95,15 +106,19 @@ Pedido contemplará ID interno, folio de factura, cliente relacionado, fecha, fe
 
 `Purchase` representa compras, no Pedidos. Permanece temporalmente junto con su visualización actual, sin ampliar funcionalidad. El historial prioritario futuro será de pedidos/facturas por folio, fecha y estado.
 
-### Horario del cliente (planificado para Clientes v1.1)
+### Horario de recepción de entregas (implementado en Clientes v1.1)
 Modelo Dart sencillo, independiente de widgets Flutter, con siete entradas semanales:
 - Día de semana: lunes 1 a domingo 7, siguiendo la convención de Dart.
 - Estado: desconocido, no recibe o recibe en un intervalo.
 - Inicio y fin en minutos desde medianoche solo cuando recibe; validar rango de 0 a 1439 e inicio anterior al fin.
 
-El horario no es texto libre ni observaciones. Los clientes sin horario registrado se consideran de horario desconocido, no cerrados. Inicialmente se admite un intervalo por día; horarios partidos, intervalos nocturnos y excepciones por fecha quedan fuera de v1.1 y podrán ampliarse después. Capturar horarios no implica implementar todavía planificación de rutas.
+`Client` valida que el horario contenga exactamente los siete días, sin duplicados ni faltantes, los ordena y expone como lista no modificable. `ReceptionDay` valida el día, el rango de minutos y que el inicio sea anterior al fin.
 
-Edición y alta de contactos conservarán ID, coordenadas, contactos y compras existentes. Clientes seguirá usando únicamente memoria y estado local simple, sin nuevas capas ni gestión avanzada de estado.
+El horario representa cuándo el cliente recibe entregas, no necesariamente su horario comercial general. No es texto libre ni observaciones. Los clientes sin horario registrado se consideran de horario desconocido, no cerrados. Se admite un intervalo por día; horarios partidos, intervalos nocturnos y excepciones por fecha quedan fuera de v1.1.
+
+La interfaz permite editar cada día individualmente y aplicar Sin definir, No recibe o un intervalo Desde/Hasta a cualquier combinación de días. La aplicación masiva conserva los días no seleccionados y no impide modificar después un día individual. Capturar horarios no implica implementar planificación de rutas.
+
+La edición y el alta de contactos conservan ID, coordenadas, contactos y compras existentes. `ClientsScreen` mantiene la lista en memoria; detalle y formularios devuelven clientes actualizados y la lista reemplaza el elemento por su ID. Salir o recrear el módulo puede perder los cambios. No se añadieron capas, gestión avanzada de estado ni dependencias externas.
 
 ## 6. Backend
 
@@ -241,9 +256,10 @@ PostgreSQL usaría volúmenes para persistencia.
 - Android.
 - Login visual.
 - Home.
-- Clientes v1: listado, búsqueda, alta con un contacto y detalle en memoria.
-- Modelos `Client`, `Contact` y `Purchase` y visualización básica de compras de ejemplo.
-- Pruebas básicas de navegación y apertura del formulario de cliente.
+- Clientes v1.1: listado, búsqueda, alta, detalle, edición, múltiples contactos y horario estructurado en memoria.
+- Configuración individual y masiva del horario de recepción de entregas.
+- Modelos `Client`, `Contact`, `ReceptionDay` y `Purchase`, con visualización básica de compras de ejemplo.
+- Prueba manual correcta en Android, análisis estático sin problemas y 25 pruebas automatizadas superadas.
 - Git/GitHub.
 
 ### Preparado
@@ -253,7 +269,6 @@ PostgreSQL usaría volúmenes para persistencia.
 - `mi_ruta_dev`.
 
 ### Pendiente
-- Clientes v1.1: edición, múltiples contactos y horario semanal estructurado, solo en memoria.
 - Pedidos v1: referencias operativas a facturas, relación con clientes, estados, consulta e historial.
 - Rutas v1: selección de pedidos que requieren entrega y planificación usando información actualizada del cliente.
 - Backend.
@@ -265,4 +280,4 @@ PostgreSQL usaría volúmenes para persistencia.
 - Routes API.
 - Navigation SDK.
 
-Orden de prioridad: Clientes v1.1 → Pedidos v1 → Rutas v1. Las tarjetas de Pedidos, Rutas y Entregas aún no implementan esos módulos. No ampliar funcionalidades de compras. Mantener una aplicación ligera para una gama amplia de dispositivos Android compatibles, sin paquetes externos innecesarios ni arquitectura compleja.
+Orden de prioridad: Clientes v1.1 **IMPLEMENTADO** → Pedidos v1 **SIGUIENTE** → Rutas v1 **POSTERIOR** → persistencia, sincronización e integraciones según las etapas definidas. Las tarjetas de Pedidos, Rutas y Entregas aún no implementan esos módulos. No ampliar funcionalidades de compras. Mantener una aplicación ligera para una gama amplia de dispositivos Android compatibles, sin paquetes externos innecesarios ni arquitectura compleja.

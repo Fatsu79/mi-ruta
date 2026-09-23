@@ -4,9 +4,9 @@
 
 Mi Ruta prioriza seguimiento de pedidos y planificación/ejecución de entregas, no ventas ni facturación. Flujo conceptual: Factura física → Pedido en Mi Ruta → Cliente → Ruta → Entrega.
 
-Implementado: login visual, Home y Clientes v1 (listado, búsqueda, alta con un contacto y detalle), únicamente en memoria. Las altas se pierden al salir del módulo y volver a entrar. Existe visualización básica de compras de ejemplo.
+Implementado: login visual, Home y Clientes v1.1. Clientes incluye listado, búsqueda, alta, detalle, edición, múltiples contactos, ubicación, condiciones comerciales, observaciones y horario estructurado de recepción de entregas. Los datos permanecen únicamente en memoria y pueden perderse al salir o recrear el módulo. Existe visualización básica de compras de ejemplo.
 
-Planificado: Clientes v1.1 (edición, múltiples contactos y horario), después Pedidos v1 y Rutas v1. Los demás requisitos son objetivos futuros salvo indicación contraria. No implementar todavía persistencia, API, autenticación real, mapas, Routes API, Navigation SDK ni sincronización offline.
+Siguiente: Pedidos v1. Posteriormente: Rutas v1 y las etapas de persistencia, sincronización e integraciones. No existe todavía SQLite, conexión con API, autenticación real, mapas, Routes API, Navigation SDK ni sincronización offline. PostgreSQL está preparado, pero no integrado. Clientes v1.1 no agregó dependencias externas, fue probado manualmente en Android, pasó `flutter analyze` y sus 25 pruebas automatizadas.
 
 ## 1. Usuarios y acceso
 
@@ -51,7 +51,7 @@ Clientes será la fuente de información operativa actualizada, porque los datos
 ### RF-101 Contactos
 Un cliente puede tener uno o varios contactos.
 
-Clientes v1 permite capturar un contacto y mostrar la lista del modelo. Clientes v1.1 permitirá agregar nuevos contactos sin perder los existentes y mostrarlos todos.
+Clientes v1.1 permite capturar el primer contacto, agregar nuevos contactos, conservar los existentes y mostrarlos todos.
 
 Cada contacto:
 - Nombre.
@@ -66,7 +66,7 @@ Cada contacto:
 - Consultar contacto, ubicación y condiciones comerciales.
 
 ### RF-103 Editar cliente
-Planificado para Clientes v1.1: modificar información existente desde el detalle, reutilizando el formulario cuando sea razonable y precargando datos. Conservar ID, coordenadas, contactos y compras existentes; actualizar la lista en memoria.
+Implementado en Clientes v1.1: modificar información existente desde el detalle reutilizando el formulario y precargando datos. Conserva ID, coordenadas, contactos y compras existentes y actualiza la lista en memoria.
 
 ### RF-104 Eliminar cliente
 Debe requerir autorización adecuada. Se evaluará eliminación lógica.
@@ -74,11 +74,17 @@ Debe requerir autorización adecuada. Se evaluará eliminación lógica.
 Fuera de Clientes v1.1.
 
 ### RF-105 Horario de recepción/entrega
-Planificado para Clientes v1.1:
+Implementado en Clientes v1.1:
 - Información estructurada por día de la semana, separada de observaciones.
+- Representa cuándo el cliente recibe entregas, no necesariamente su horario comercial general.
+- Exactamente siete días, de lunes a domingo, sin duplicados ni faltantes.
 - Distinguir horario desconocido, día en que no recibe e intervalo de recepción.
-- Inicialmente un intervalo por día, con inicio anterior al fin.
-- Permitir capturar y consultar el horario sin implementar aún cálculo de rutas.
+- Configuración individual de cada día.
+- Opción "Aplicar horario a varios días" con selección libre de cualquier combinación.
+- Aplicación masiva de Sin definir, No recibe o intervalo Desde/Hasta únicamente a los días seleccionados.
+- Los días no seleccionados conservan su valor y todos continúan siendo editables individualmente.
+- Un intervalo por día, con ambas horas válidas e inicio anterior al fin.
+- Captura y consulta del horario sin implementar cálculo de rutas.
 - Horarios partidos, intervalos nocturnos y excepciones por fecha quedan para una ampliación futura, sin sobrecomplicar la primera implementación.
 
 ## 3. Compras — funcionalidad suspendida
@@ -183,7 +189,7 @@ Recalcular cuando:
 - El usuario solicita recalcular.
 
 ### RF-503 Horarios
-Clientes v1.1 capturará horarios estructurados según RF-105. Su utilización para determinar viabilidad de entregas y orden de paradas será futura; no se implementará lógica de planificación todavía.
+Clientes v1.1 captura horarios estructurados según RF-105. Su utilización para determinar viabilidad de entregas y orden de paradas será futura; todavía no existe lógica de planificación.
 
 ### RF-504 Navegación
 - Routes API: calcula/proporciona rutas.

@@ -6,9 +6,21 @@
 
 El flujo operativo parte de facturas físicas, que permiten identificar folio, cliente y contenido por entregar. Mi Ruta mantendrá información operativa actualizada de los clientes y permitirá dar seguimiento a pedidos/facturas, planificar rutas y registrar entregas, incluyendo escenarios futuros con conectividad limitada.
 
-Flujo conceptual: **Factura física → Pedido en Mi Ruta → Cliente → Ruta → Entrega**.
+Flujo central:
 
-Mi Ruta no pretende reemplazar el sistema de facturación ni convertirse en un sistema completo de ventas. El Pedido será principalmente una referencia a la factura física y una unidad operativa para seguimiento, planificación de rutas y entrega. No se duplicará innecesariamente su información: productos, cantidades, precios, impuestos y demás contenido de la factura quedan fuera del alcance actual.
+```text
+FACTURA FÍSICA
+↓
+PEDIDO EN MI RUTA
+↓
+CLIENTE con información actualizada
+↓
+PLANIFICACIÓN DE RUTA
+↓
+ENTREGA
+```
+
+La factura física ya existe y continúa siendo la fuente del detalle de lo que debe entregarse. Mi Ruta no pretende reemplazarla ni convertirse en un sistema de facturación, ventas o inventario. El Pedido será principalmente una referencia operativa a la factura y una unidad para seguimiento, planificación de rutas y entrega. No se duplicará innecesariamente su información: productos, cantidades, precios, impuestos y demás contenido quedan fuera del alcance actual.
 
 La primera plataforma objetivo es **Android**.
 
@@ -63,10 +75,17 @@ Esta lista no implica que todas las funcionalidades estén implementadas.
 - Aplicación ejecutándose en Android.
 - Login visual sin autenticación real.
 - Pantalla principal con Clientes, Pedidos, Rutas y Entregas.
-- Clientes v1: listado, búsqueda, alta con un contacto y detalle; datos de ejemplo y altas únicamente en memoria, que se pierden al salir del módulo y volver a entrar.
-- Modelos `Client`, `Contact` y `Purchase`, con visualización básica de compras de ejemplo.
-- Pruebas básicas de login → Home, Home → Clientes y apertura del formulario.
+- Clientes v1.1: listado, búsqueda, alta, detalle, edición, múltiples contactos y alta de contactos.
+- Ubicación del cliente: estado, municipio, dirección y coordenadas opcionales.
+- Condiciones comerciales, observaciones y horario estructurado de recepción de entregas.
+- Horario de lunes a domingo: Sin definir, No recibe o intervalo Desde/Hasta; configuración individual y aplicación masiva a cualquier combinación de días.
+- Validación de intervalos y de una semana con exactamente siete días, sin duplicados ni faltantes.
+- Modelos `Client`, `Contact`, `ReceptionDay` y `Purchase`, con visualización básica de compras de ejemplo.
+- Datos y cambios únicamente en memoria; pueden perderse al salir o recrear el módulo.
+- Sin dependencias externas agregadas para Clientes v1.1.
+- Implementación probada manualmente en Android; `flutter analyze` sin problemas y 25 pruebas automatizadas superadas.
 - Git y GitHub configurados.
+- Clientes v1.1 guardado en Git y GitHub.
 - Emulador Android 16 / API 36 funcionando.
 
 ### Instalado/preparado
@@ -77,16 +96,17 @@ Esta lista no implica que todas las funcionalidades estén implementadas.
 - Base de desarrollo `mi_ruta_dev`.
 - Codex en VS Code.
 
-### Próximos incrementos (no implementados)
-1. **Clientes v1.1:** editar sin perder datos existentes, múltiples contactos y horario semanal de recepción/entrega; solo en memoria.
-2. **Pedidos v1:** registro por folio de factura, relación con clientes, estados, consulta e historial.
-3. **Rutas v1:** planificación de entregas usando pedidos que requieren entrega y ubicación, contactos y horarios actualizados del cliente.
+### Prioridad del proyecto
+1. **Clientes v1.1 — IMPLEMENTADO.**
+2. **Pedidos v1 — SIGUIENTE.** Registro por folio de factura, relación con clientes, estados, consulta e historial.
+3. **Rutas v1 — POSTERIOR.** Planificación de entregas usando pedidos que requieren entrega e información actualizada del cliente.
+4. **Persistencia, sincronización e integraciones.** Según las siguientes etapas definidas en la arquitectura.
 
 Las reglas exactas para incorporar pedidos a una ruta se definirán al diseñar Pedidos v1, sin restringir todavía su selección a estados específicos. También quedan pendientes las reglas de identificación/duplicados del folio y el tratamiento de entregas fallidas/reprogramaciones.
 
 `Purchase` permanece temporalmente sin ampliar su funcionalidad. Se suspende el desarrollo de registro de compras, compras recientes e historial completo de compras.
 
-Las tarjetas de Pedidos, Rutas y Entregas no tienen todavía funcionalidad. Persistencia, API, autenticación real, mapas y sincronización siguen siendo objetivos futuros, no parte del incremento actual.
+Las tarjetas de Pedidos, Rutas y Entregas no tienen todavía funcionalidad. No existe SQLite, conexión con API, autenticación real, mapas ni sincronización. PostgreSQL está preparado para el futuro, pero no está integrado.
 
 ## 6. Tecnologías principales
 

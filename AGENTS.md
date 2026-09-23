@@ -132,15 +132,18 @@ Implementado:
 - Android.
 - Login visual sin auth real.
 - Home con Clientes, Pedidos, Rutas y Entregas.
-- Clientes v1: listado, búsqueda, alta con un contacto y detalle con datos de ejemplo en memoria.
-- Modelos `Client`, `Contact` y `Purchase`; visualización básica de compras de ejemplo.
-- Tests básicos.
+- Clientes v1.1: listado, búsqueda, alta, detalle, edición y múltiples contactos.
+- Horario estructurado de recepción de entregas de lunes a domingo, editable por día o mediante aplicación masiva a cualquier combinación de días.
+- Modelos `Client`, `Contact`, `ReceptionDay` y `Purchase`; visualización básica de compras de ejemplo.
+- Clientes utiliza datos en memoria y no agregó dependencias externas.
+- Prueba manual correcta en Android, `flutter analyze` sin problemas y 25 pruebas automatizadas superadas.
 - Git/GitHub.
 
-Prioridad de desarrollo (todavía no implementada):
-1. Clientes v1.1: edición, múltiples contactos y horario de recepción/entrega.
-2. Pedidos v1: referencias a facturas, relación con clientes, estados, consulta e historial.
-3. Rutas v1: selección de pedidos que requieren entrega y planificación con información actualizada del cliente.
+Prioridad de desarrollo:
+1. Clientes v1.1: **IMPLEMENTADO**.
+2. Pedidos v1: **SIGUIENTE**; referencias a facturas, relación con clientes, estados, consulta e historial.
+3. Rutas v1: **POSTERIOR**; planificación con pedidos que requieren entrega e información actualizada del cliente.
+4. Persistencia, sincronización e integraciones: etapas futuras según la arquitectura.
 
 Las tarjetas de Pedidos, Rutas y Entregas aún no implementan esos módulos.
 
@@ -165,7 +168,7 @@ El Pedido será principalmente una referencia a la factura física y una unidad 
 - tiene crédito.
 - observaciones.
 - contactos.
-- horario de recepción/entrega estructurado por día de la semana (planificado).
+- horario estructurado de recepción de entregas por día de la semana.
 - compras existentes únicamente como compatibilidad temporal.
 
 ### Contacto
@@ -181,11 +184,22 @@ El Pedido será principalmente una referencia a la factura física y una unidad 
 
 Mantener `Purchase` temporalmente sin ampliar su funcionalidad ni convertirlo en Pedido. La prioridad futura es el historial de pedidos/facturas.
 
-### Clientes v1.1 (planificado)
+### Clientes v1.1 (implementado)
+- Listado, búsqueda, alta, detalle y edición de clientes.
 - Editar sin perder ID, coordenadas, contactos ni compras existentes.
 - Agregar y mostrar múltiples contactos.
-- Horario semanal separado de observaciones: desconocido, no recibe o intervalo de recepción.
-- Mantener los datos solo en memoria; actualmente se pierden al salir del módulo y volver a entrar.
+- Ubicación: estado, municipio, dirección y coordenadas opcionales.
+- Condiciones comerciales: descuento y crédito.
+- Observaciones separadas del horario.
+- Horario de recepción de entregas con exactamente siete días, sin duplicados ni faltantes.
+- Cada día puede estar Sin definir, No recibe o Recibe en un intervalo Desde/Hasta.
+- Configuración individual y opción "Aplicar horario a varios días" con selección libre de cualquier combinación.
+- Después de aplicar en bloque, cada día continúa siendo editable individualmente.
+- Validar horas completas, rangos válidos e inicio anterior al fin.
+- Los datos permanecen solo en memoria y pueden perderse al salir o recrear el módulo.
+- Sin dependencias externas nuevas; probado manualmente en Android y con 25 pruebas automatizadas.
+
+El horario representa cuándo el cliente recibe entregas, no necesariamente su horario comercial general.
 
 ### Decisiones pendientes para Pedidos v1
 - No asumir que el folio de factura es globalmente único; definir identificación y duplicados.
@@ -200,11 +214,17 @@ Primera versión:
 - Detalle.
 - Datos de prueba en memoria.
 
+Estado técnico actual:
+- No existe SQLite ni conexión con API.
+- PostgreSQL está preparado para el futuro, pero no integrado.
+- No existe autenticación real, sincronización offline ni integración de Maps, Routes API o Navigation SDK.
+- Clientes v1.1 está guardado en Git y GitHub.
+
 Todavía NO:
-- PostgreSQL.
+- PostgreSQL integrado.
 - SQLite.
 - API.
-- Maps.
+- Maps, Routes API ni Navigation SDK integrados.
 - Auth real.
 - Sincronización offline.
 - Módulo Pedidos sin solicitud y diseño aprobados.
