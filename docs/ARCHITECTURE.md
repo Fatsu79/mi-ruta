@@ -95,14 +95,36 @@ Los modelos no son la base de datos.
 ### Relaciones operativas futuras
 - Un Pedido pertenece a un Cliente mediante su ID interno.
 - Cliente aporta ubicación, múltiples contactos, horario y demás información operativa actualizada, aunque la factura física esté incompleta o desactualizada.
-- Pedidos que requieren entrega se utilizarán para planificar rutas; las reglas exactas se definirán en Pedidos v1, sin fijar estados elegibles todavía.
+- Pedidos que requieren entrega se utilizarán para planificar rutas; las reglas exactas se definirán antes de implementar Rutas v1, sin fijar estados elegibles todavía.
 - Ruta relacionará pedidos y paradas de entrega, usando información actualizada del cliente. No diseñar Pedidos de forma aislada de Clientes y Rutas.
 
 Flujo conceptual: Factura física → Pedido en Mi Ruta → Cliente → Ruta → Entrega.
 
 Pedido será principalmente una referencia a la factura física y una unidad operativa para seguimiento, planificación de rutas y entrega. Mi Ruta no reemplaza facturación ni es un sistema completo de ventas. Productos, cantidades, precios, impuestos y demás contenido de la factura quedan fuera del alcance actual, evitando duplicación innecesaria.
 
-Pedido contemplará ID interno, folio de factura, cliente relacionado, fecha, fecha prevista/programada de entrega opcional, estado y observaciones operativas. No asumir folio globalmente único: definir identificación y duplicados en Pedidos v1. Estados base propuestos: Pendiente, Programado, En ruta, Entregado y Cancelado; transiciones, entregas fallidas y reprogramaciones quedan pendientes. Una entrega fallida no equivale a cancelación.
+### Pedido (diseño aprobado para Pedidos v1)
+Modelo Dart previsto, independiente de widgets Flutter:
+- `id`: `String` interno e inmutable, independiente del folio.
+- `invoiceNumber`: folio alfanumérico `String`, obligatorio y sin límite pequeño artificial.
+- `clientId`: `String` que referencia a `Client.id`, sin copiar datos del cliente.
+- `invoiceDate`: fecha de factura.
+- `expectedDeliveryDate`: fecha prevista de entrega opcional.
+- `status`: estado del pedido.
+- `notes`: observaciones generales opcionales.
+- `postponementReason`: motivo de posposición separado de `notes`.
+
+Estados: Sin ruta, En ruta, Entregado, Pospuesto y Cancelado. Un pedido nuevo inicia automáticamente Sin ruta y su formulario de creación no expone el estado. En ruta queda reservado para la futura integración con Rutas y no será una transición manual en Pedidos v1.
+
+El modelo validará que un Pedido Pospuesto tenga un motivo no vacío. La interfaz solicitará el motivo antes de confirmar, mantendrá las observaciones generales separadas y mostrará claramente el motivo mientras el pedido esté Pospuesto. No se eliminará automáticamente un motivo existente al abandonar Pospuesto; la política definitiva de conservación o historial queda pendiente. No habrá historial complejo de estados o motivos en v1.
+
+El folio no será clave primaria ni identificador interno. En memoria se permitirán folios repetidos y las actualizaciones usarán `Order.id`. La regla definitiva de unicidad se decidirá antes de diseñar la base de datos.
+
+### Estado compartido temporal
+`HomeScreen` mantendrá temporalmente `List<Client>` y `List<Order>` y entregará las mismas colecciones a Clientes y Pedidos. `Order` guardará solo `clientId`; las pantallas resolverán el cliente actual en la lista compartida. Así, una edición del cliente se reflejará en sus pedidos sin duplicar ubicación, coordenadas, contactos, horario u observaciones.
+
+Esta solución será estado local sencillo y únicamente en memoria. No introduce paquetes, singleton, persistencia ni gestión avanzada de estado. Los datos podrán perderse al recrear Home o la aplicación.
+
+Pedidos v1 tendrá listado con búsqueda y filtro, formulario reutilizado para alta/edición, detalle, cambio de estado y navegación al detalle del cliente. No incluirá productos, cantidades, precios, impuestos, inventario, ventas, generación de facturas, historial complejo, Rutas o Entregas.
 
 `Purchase` representa compras, no Pedidos. Permanece temporalmente junto con su visualización actual, sin ampliar funcionalidad. El historial prioritario futuro será de pedidos/facturas por folio, fecha y estado.
 

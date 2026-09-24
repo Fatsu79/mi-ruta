@@ -111,31 +111,52 @@ Ampliaciones suspendidas:
 ### RF-300 Crear pedido
 Un Pedido representa una factura que debe ser atendida o que históricamente fue atendida. Será principalmente una referencia a esa factura física y una unidad operativa para seguimiento, planificación de rutas y entrega, sin duplicar innecesariamente su contenido.
 
-Campos iniciales propuestos para Pedidos v1 (no implementado):
+Campos aprobados para Pedidos v1 (no implementado):
 - ID interno.
-- Folio de factura.
-- Cliente relacionado.
-- Fecha.
+- Folio de factura alfanumérico (`String`), sin límite pequeño artificial.
+- Cliente relacionado mediante `clientId` (`String`).
+- Fecha de factura.
 - Estado.
-- Observaciones operativas.
+- Observaciones generales opcionales (`notes`).
+- Motivo de posposición (`postponementReason`), independiente de las observaciones generales.
 - Fecha prevista/programada de entrega, cuando corresponda.
 
-No asumir que el folio es globalmente único. Las reglas de identificación y duplicados se definirán al diseñar Pedidos v1. Prioridades podrán considerarse posteriormente para rutas; su captura y reglas no están definidas todavía.
+El ID interno es independiente del folio. No asumir que el folio es globalmente único ni utilizarlo como clave primaria. Temporalmente se permiten folios repetidos; la regla definitiva de unicidad para la futura base de datos queda pendiente.
+
+Todo pedido nuevo se crea automáticamente con estado Sin ruta. El formulario de creación no permite seleccionar otro estado. Los datos permanecen únicamente en memoria.
 
 ### RF-301 Estados
-- Pendiente.
-- Programado.
+- Sin ruta.
 - En ruta.
 - Entregado.
+- Pospuesto.
 - Cancelado.
 
-Estados base propuestos; no agregar otros sin necesidad funcional definida. Transiciones, entregas fallidas y reprogramaciones se definirán al diseñar Pedidos v1. Una entrega fallida no equivale a cancelar el pedido.
+En ruta queda reservado para la futura integración con Rutas y no se ofrecerá como transición manual en Pedidos v1. Las transiciones automáticas relacionadas con Rutas se diseñarán posteriormente.
+
+Para cambiar a Pospuesto:
+- Solicitar `postponementReason` antes de confirmar.
+- Rechazar un motivo nulo, vacío o compuesto solo por espacios.
+- Mantener `notes` independiente y opcional.
+- Mostrar claramente el motivo mientras el pedido esté Pospuesto.
+
+No eliminar automáticamente un motivo existente solo por abandonar Pospuesto. La política definitiva para conservar o historizar motivos anteriores se decidirá posteriormente. No implementar todavía historial complejo de estados o motivos. El tratamiento de entregas fallidas y reprogramaciones también queda pendiente.
 
 ### RF-302 Detalle
 Fuera del alcance actual: captura de productos, cantidades, precios, impuestos y demás conceptos o contenido de la factura. El folio permite localizar la factura física cuando se necesitan esos detalles. Se conserva este identificador para trazabilidad, sin compromiso de implementación.
 
 ### RF-303 Consulta e historial de pedidos/facturas
-Planificado para Pedidos v1: consultar pedidos y, desde un cliente, localizar sus pedidos/facturas mostrando al menos folio, fecha y estado. El folio servirá para investigar una entrega histórica consultando la factura física.
+Pedidos v1 permitirá:
+- Listar pedidos.
+- Buscar por folio o cliente.
+- Filtrar por estado.
+- Crear un pedido seleccionando un cliente existente.
+- Consultar detalle.
+- Editar folio, cliente, fechas y observaciones generales sin cambiar el ID.
+- Cambiar manualmente entre los estados permitidos en v1.
+- Acceder desde el detalle del pedido a la información actual del cliente relacionado.
+
+El historial complejo queda fuera de v1. El folio servirá para localizar la factura física cuando se necesite el detalle oficial de mercancía.
 
 ## 5. Entregas
 
@@ -164,7 +185,7 @@ Futuro:
 ## 6. Rutas
 
 ### RF-500 Generar ruta
-Los pedidos que requieren entrega serán utilizados para planificar rutas. Las reglas exactas de selección se definirán al diseñar Pedidos v1; no se fijan todavía estados específicos elegibles.
+Los pedidos que requieren entrega serán utilizados para planificar rutas. Las reglas exactas de selección se definirán antes de implementar Rutas v1; no se fijan todavía estados específicos elegibles.
 
 Un Pedido pertenece a un Cliente, que proporciona ubicación, contactos, horario y demás información actualizada. Pedidos no debe diseñarse como un módulo aislado de Clientes y Rutas.
 

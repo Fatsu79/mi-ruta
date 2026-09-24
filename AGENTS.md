@@ -201,11 +201,29 @@ Mantener `Purchase` temporalmente sin ampliar su funcionalidad ni convertirlo en
 
 El horario representa cuándo el cliente recibe entregas, no necesariamente su horario comercial general.
 
-### Decisiones pendientes para Pedidos v1
-- No asumir que el folio de factura es globalmente único; definir identificación y duplicados.
-- Definir tratamiento de entregas fallidas y reprogramaciones; una entrega fallida no equivale a cancelar el pedido.
-- Usar pedidos que requieren entrega para planificar rutas, sin fijar todavía estados elegibles ni reglas exactas.
-- Estados base propuestos: Pendiente, Programado, En ruta, Entregado y Cancelado. No agregar otros sin necesidad funcional definida.
+### Pedidos v1 (diseño aprobado, no implementado)
+- Referencia operativa a una factura física, sin copiar productos, cantidades, precios, impuestos ni el contenido completo.
+- ID interno independiente del folio.
+- Folio alfanumérico como `String`, sin límite pequeño artificial y sin asumir unicidad definitiva.
+- Relación con Cliente mediante `clientId` (`String`), sin duplicar sus datos.
+- Fecha de factura y fecha prevista de entrega opcional.
+- `notes`: observaciones generales opcionales, independientes del estado.
+- `postponementReason`: motivo de posposición independiente de las observaciones generales.
+- Estados: Sin ruta, En ruta, Entregado, Pospuesto y Cancelado.
+- Todo pedido nuevo inicia automáticamente Sin ruta; el formulario de creación no permite elegir estado.
+- En ruta queda reservado para la futura integración con Rutas y no será una transición manual en Pedidos v1.
+- Para cambiar a Pospuesto, solicitar y validar un motivo obligatorio no vacío antes de confirmar.
+- Mientras esté Pospuesto, mostrar claramente el motivo.
+- No eliminar automáticamente un motivo existente al abandonar Pospuesto. La política definitiva de conservación o historial se decidirá después.
+- Listado, búsqueda por folio o cliente, filtro por estado, alta, detalle, edición y cambio manual de los estados permitidos.
+- Datos únicamente en memoria; Home compartirá temporalmente Clientes y Pedidos.
+
+### Decisiones que siguen pendientes
+- Regla definitiva de unicidad o duplicidad del folio para la futura base de datos; temporalmente se permiten folios repetidos.
+- Política definitiva para conservar o historizar motivos de posposición anteriores.
+- Tratamiento de entregas fallidas y reprogramaciones.
+- Reglas definitivas de selección de pedidos para Rutas.
+- Transiciones automáticas relacionadas con Rutas, incluida En ruta.
 
 Primera versión:
 - Listado.
@@ -227,7 +245,7 @@ Todavía NO:
 - Maps, Routes API ni Navigation SDK integrados.
 - Auth real.
 - Sincronización offline.
-- Módulo Pedidos sin solicitud y diseño aprobados.
+- Módulo Pedidos aún no implementado.
 
 Mantener la aplicación ligera para una gama amplia de dispositivos Android compatibles, sin dependencias ni optimizaciones complejas innecesarias.
 

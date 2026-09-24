@@ -98,15 +98,19 @@ Esta lista no implica que todas las funcionalidades estén implementadas.
 
 ### Prioridad del proyecto
 1. **Clientes v1.1 — IMPLEMENTADO.**
-2. **Pedidos v1 — SIGUIENTE.** Registro por folio de factura, relación con clientes, estados, consulta e historial.
+2. **Pedidos v1 — SIGUIENTE.** Referencia operativa a una factura, relación con clientes, estados, consulta y edición; diseño aprobado, todavía no implementado.
 3. **Rutas v1 — POSTERIOR.** Planificación de entregas usando pedidos que requieren entrega e información actualizada del cliente.
 4. **Persistencia, sincronización e integraciones.** Según las siguientes etapas definidas en la arquitectura.
 
-Las reglas exactas para incorporar pedidos a una ruta se definirán al diseñar Pedidos v1, sin restringir todavía su selección a estados específicos. También quedan pendientes las reglas de identificación/duplicados del folio y el tratamiento de entregas fallidas/reprogramaciones.
+Pedidos v1 usará un ID interno independiente, folio alfanumérico, relación por `clientId`, fecha de factura, fecha prevista opcional, estado, observaciones generales y motivo de posposición separado. Los estados serán Sin ruta, En ruta, Entregado, Pospuesto y Cancelado. Todo pedido nuevo iniciará automáticamente Sin ruta; En ruta quedará reservado para la futura integración con Rutas.
+
+Para cambiar a Pospuesto será obligatorio proporcionar un motivo no vacío, independiente de las observaciones generales, y mostrarlo claramente mientras el pedido permanezca en ese estado. No se eliminará automáticamente un motivo existente al abandonar Pospuesto; la política definitiva para conservarlo o historizarlo se decidirá posteriormente.
+
+Temporalmente se permitirán folios repetidos. Siguen pendientes la regla definitiva de unicidad para la futura base de datos, el tratamiento de entregas fallidas y reprogramaciones, las transiciones ligadas a Rutas y las reglas definitivas para seleccionar pedidos al planificar rutas.
 
 `Purchase` permanece temporalmente sin ampliar su funcionalidad. Se suspende el desarrollo de registro de compras, compras recientes e historial completo de compras.
 
-Las tarjetas de Pedidos, Rutas y Entregas no tienen todavía funcionalidad. No existe SQLite, conexión con API, autenticación real, mapas ni sincronización. PostgreSQL está preparado para el futuro, pero no está integrado.
+Pedidos v1 se diseñará con listado, búsqueda por folio o cliente, filtro por estado, alta seleccionando un cliente existente, detalle, edición, cambio de estado y acceso al cliente relacionado. Home compartirá temporalmente Clientes y Pedidos en memoria. Las tarjetas de Pedidos, Rutas y Entregas no tienen todavía funcionalidad. No existe SQLite, conexión con API, autenticación real, mapas ni sincronización. PostgreSQL está preparado para el futuro, pero no está integrado.
 
 ## 6. Tecnologías principales
 
