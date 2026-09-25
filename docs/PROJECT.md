@@ -81,11 +81,18 @@ Esta lista no implica que todas las funcionalidades estén implementadas.
 - Horario de lunes a domingo: Sin definir, No recibe o intervalo Desde/Hasta; configuración individual y aplicación masiva a cualquier combinación de días.
 - Validación de intervalos y de una semana con exactamente siete días, sin duplicados ni faltantes.
 - Modelos `Client`, `Contact`, `ReceptionDay` y `Purchase`, con visualización básica de compras de ejemplo.
-- Datos y cambios únicamente en memoria; pueden perderse al salir o recrear el módulo.
-- Sin dependencias externas agregadas para Clientes v1.1.
-- Implementación probada manualmente en Android; `flutter analyze` sin problemas y 25 pruebas automatizadas superadas.
+- Pedidos v1: listado, búsqueda por folio o cliente, filtro por estado, alta, detalle, edición y cambio manual de los estados permitidos.
+- Modelo `Order` con ID interno independiente, folio alfanumérico, relación con Cliente mediante `clientId`, fechas, estado, observaciones generales y motivo de posposición separado.
+- Acceso desde el detalle del Pedido a la información actual del Cliente relacionado.
+- Pedidos nuevos en estado Sin ruta; En ruta es visible y filtrable, pero queda reservado para la futura integración con Rutas y no puede seleccionarse manualmente.
+- Folios repetidos permitidos temporalmente y ausencia deliberada de productos, cantidades, precios, impuestos y contenido detallado de la factura.
+- Home comparte temporalmente las colecciones de Clientes y Pedidos en memoria.
+- Datos y cambios únicamente en memoria; pueden perderse al recrear Home o la aplicación.
+- Sin dependencias externas agregadas para Clientes v1.1 ni Pedidos v1.
+- Implementación probada manualmente en Android; `flutter analyze` sin problemas y 38 pruebas automatizadas superadas.
 - Git y GitHub configurados.
 - Clientes v1.1 guardado en Git y GitHub.
+- Pedidos v1 guardado en Git y GitHub.
 - Emulador Android 16 / API 36 funcionando.
 
 ### Instalado/preparado
@@ -98,19 +105,21 @@ Esta lista no implica que todas las funcionalidades estén implementadas.
 
 ### Prioridad del proyecto
 1. **Clientes v1.1 — IMPLEMENTADO.**
-2. **Pedidos v1 — SIGUIENTE.** Referencia operativa a una factura, relación con clientes, estados, consulta y edición; diseño aprobado, todavía no implementado.
-3. **Rutas v1 — POSTERIOR.** Planificación de entregas usando pedidos que requieren entrega e información actualizada del cliente.
+2. **Pedidos v1 — IMPLEMENTADO.** Referencia operativa a una factura, relación con clientes, estados, consulta y edición.
+3. **Rutas v1 — SIGUIENTE.** Su diseño funcional se realizará antes de implementarlo, sin anticipar todavía reglas operativas definitivas.
 4. **Persistencia, sincronización e integraciones.** Según las siguientes etapas definidas en la arquitectura.
 
-Pedidos v1 usará un ID interno independiente, folio alfanumérico, relación por `clientId`, fecha de factura, fecha prevista opcional, estado, observaciones generales y motivo de posposición separado. Los estados serán Sin ruta, En ruta, Entregado, Pospuesto y Cancelado. Todo pedido nuevo iniciará automáticamente Sin ruta; En ruta quedará reservado para la futura integración con Rutas.
+Pedidos v1 usa un ID interno independiente, folio alfanumérico, relación por `clientId`, fecha de factura, fecha prevista opcional, estado, observaciones generales y motivo de posposición separado. Los estados son Sin ruta, En ruta, Entregado, Pospuesto y Cancelado. Todo pedido nuevo inicia automáticamente Sin ruta; En ruta queda reservado para la futura integración con Rutas.
 
 Para cambiar a Pospuesto será obligatorio proporcionar un motivo no vacío, independiente de las observaciones generales, y mostrarlo claramente mientras el pedido permanezca en ese estado. No se eliminará automáticamente un motivo existente al abandonar Pospuesto; la política definitiva para conservarlo o historizarlo se decidirá posteriormente.
 
 Temporalmente se permitirán folios repetidos. Siguen pendientes la regla definitiva de unicidad para la futura base de datos, el tratamiento de entregas fallidas y reprogramaciones, las transiciones ligadas a Rutas y las reglas definitivas para seleccionar pedidos al planificar rutas.
 
+Antes de implementar Rutas v1 deberán diseñarse y aprobarse sus reglas de asignación de pedidos, orden de paradas, relación con choferes, inicio y finalización de rutas, reprogramaciones y transiciones automáticas adicionales. Este cierre de Pedidos v1 no define ninguna de esas decisiones.
+
 `Purchase` permanece temporalmente sin ampliar su funcionalidad. Se suspende el desarrollo de registro de compras, compras recientes e historial completo de compras.
 
-Pedidos v1 se diseñará con listado, búsqueda por folio o cliente, filtro por estado, alta seleccionando un cliente existente, detalle, edición, cambio de estado y acceso al cliente relacionado. Home compartirá temporalmente Clientes y Pedidos en memoria. Las tarjetas de Pedidos, Rutas y Entregas no tienen todavía funcionalidad. No existe SQLite, conexión con API, autenticación real, mapas ni sincronización. PostgreSQL está preparado para el futuro, pero no está integrado.
+Pedidos v1 incluye listado, búsqueda por folio o cliente, filtro por estado, alta seleccionando un cliente existente, detalle, edición, cambio manual de los estados permitidos y acceso al cliente relacionado. Home comparte temporalmente Clientes y Pedidos en memoria. Las tarjetas de Rutas y Entregas no tienen todavía funcionalidad. No existe SQLite, conexión con API, autenticación real, mapas ni sincronización. PostgreSQL está preparado para el futuro, pero no está integrado.
 
 ## 6. Tecnologías principales
 

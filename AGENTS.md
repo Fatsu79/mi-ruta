@@ -136,16 +136,19 @@ Implementado:
 - Horario estructurado de recepción de entregas de lunes a domingo, editable por día o mediante aplicación masiva a cualquier combinación de días.
 - Modelos `Client`, `Contact`, `ReceptionDay` y `Purchase`; visualización básica de compras de ejemplo.
 - Clientes utiliza datos en memoria y no agregó dependencias externas.
-- Prueba manual correcta en Android, `flutter analyze` sin problemas y 25 pruebas automatizadas superadas.
+- Pedidos v1: listado, búsqueda por folio o cliente, filtro por estado, alta, detalle, edición, cambio manual de los estados permitidos y acceso al cliente relacionado.
+- Modelo `Order` relacionado con `Client` mediante `clientId`, con ID interno independiente, folio alfanumérico, fechas, estado, observaciones generales y motivo de posposición separado.
+- Home comparte temporalmente Clientes y Pedidos en memoria; no existe persistencia real.
+- Prueba manual correcta en Android, `flutter analyze` sin problemas y 38 pruebas automatizadas superadas.
 - Git/GitHub.
 
 Prioridad de desarrollo:
 1. Clientes v1.1: **IMPLEMENTADO**.
-2. Pedidos v1: **SIGUIENTE**; referencias a facturas, relación con clientes, estados, consulta e historial.
-3. Rutas v1: **POSTERIOR**; planificación con pedidos que requieren entrega e información actualizada del cliente.
+2. Pedidos v1: **IMPLEMENTADO**; referencias operativas a facturas, relación con clientes, estados, consulta y edición.
+3. Rutas v1: **SIGUIENTE**; su diseño funcional sigue pendiente y se realizará antes de implementarlo.
 4. Persistencia, sincronización e integraciones: etapas futuras según la arquitectura.
 
-Las tarjetas de Pedidos, Rutas y Entregas aún no implementan esos módulos.
+Las tarjetas de Rutas y Entregas aún no implementan esos módulos.
 
 ## 13. Clientes y dirección operativa
 
@@ -196,12 +199,12 @@ Mantener `Purchase` temporalmente sin ampliar su funcionalidad ni convertirlo en
 - Configuración individual y opción "Aplicar horario a varios días" con selección libre de cualquier combinación.
 - Después de aplicar en bloque, cada día continúa siendo editable individualmente.
 - Validar horas completas, rangos válidos e inicio anterior al fin.
-- Los datos permanecen solo en memoria y pueden perderse al salir o recrear el módulo.
+- Los datos permanecen solo en memoria y pueden perderse al recrear Home o la aplicación.
 - Sin dependencias externas nuevas; probado manualmente en Android y con 25 pruebas automatizadas.
 
 El horario representa cuándo el cliente recibe entregas, no necesariamente su horario comercial general.
 
-### Pedidos v1 (diseño aprobado, no implementado)
+### Pedidos v1 (implementado)
 - Referencia operativa a una factura física, sin copiar productos, cantidades, precios, impuestos ni el contenido completo.
 - ID interno independiente del folio.
 - Folio alfanumérico como `String`, sin límite pequeño artificial y sin asumir unicidad definitiva.
@@ -211,12 +214,13 @@ El horario representa cuándo el cliente recibe entregas, no necesariamente su h
 - `postponementReason`: motivo de posposición independiente de las observaciones generales.
 - Estados: Sin ruta, En ruta, Entregado, Pospuesto y Cancelado.
 - Todo pedido nuevo inicia automáticamente Sin ruta; el formulario de creación no permite elegir estado.
-- En ruta queda reservado para la futura integración con Rutas y no será una transición manual en Pedidos v1.
+- En ruta queda reservado para la futura integración con Rutas y no es una transición manual en Pedidos v1.
 - Para cambiar a Pospuesto, solicitar y validar un motivo obligatorio no vacío antes de confirmar.
 - Mientras esté Pospuesto, mostrar claramente el motivo.
 - No eliminar automáticamente un motivo existente al abandonar Pospuesto. La política definitiva de conservación o historial se decidirá después.
 - Listado, búsqueda por folio o cliente, filtro por estado, alta, detalle, edición y cambio manual de los estados permitidos.
-- Datos únicamente en memoria; Home compartirá temporalmente Clientes y Pedidos.
+- Datos únicamente en memoria; Home comparte temporalmente Clientes y Pedidos.
+- Probado manualmente en Android, con análisis estático sin problemas y 38 pruebas automatizadas totales.
 
 ### Decisiones que siguen pendientes
 - Regla definitiva de unicidad o duplicidad del folio para la futura base de datos; temporalmente se permiten folios repetidos.
@@ -224,6 +228,7 @@ El horario representa cuándo el cliente recibe entregas, no necesariamente su h
 - Tratamiento de entregas fallidas y reprogramaciones.
 - Reglas definitivas de selección de pedidos para Rutas.
 - Transiciones automáticas relacionadas con Rutas, incluida En ruta.
+- Diseño de Rutas v1: asignación de pedidos, orden de paradas, relación con choferes, inicio y finalización de rutas y cualquier regla adicional de reprogramación. No asumir estas decisiones antes de su diseño aprobado.
 
 Primera versión:
 - Listado.
@@ -236,7 +241,7 @@ Estado técnico actual:
 - No existe SQLite ni conexión con API.
 - PostgreSQL está preparado para el futuro, pero no integrado.
 - No existe autenticación real, sincronización offline ni integración de Maps, Routes API o Navigation SDK.
-- Clientes v1.1 está guardado en Git y GitHub.
+- Clientes v1.1 y Pedidos v1 están guardados en Git y GitHub.
 
 Todavía NO:
 - PostgreSQL integrado.
@@ -245,7 +250,7 @@ Todavía NO:
 - Maps, Routes API ni Navigation SDK integrados.
 - Auth real.
 - Sincronización offline.
-- Módulo Pedidos aún no implementado.
+- Módulos Rutas y Entregas aún no implementados.
 
 Mantener la aplicación ligera para una gama amplia de dispositivos Android compatibles, sin dependencias ni optimizaciones complejas innecesarias.
 

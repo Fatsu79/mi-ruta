@@ -24,7 +24,7 @@ PostgreSQL
 
 Arquitectura futura: Flutter ↔ SQLite ↔ API ASP.NET Core ↔ PostgreSQL. SQLite será almacenamiento local de trabajo; PostgreSQL será la fuente autoritativa del servidor. No implementarla en el incremento actual.
 
-Actualmente Flutter usa datos en memoria dentro de Clientes, con navegación y estado local sencillo. No hay SQLite, API, PostgreSQL integrado, autenticación real, mapas ni sincronización. Las altas se pierden al salir del módulo y volver a entrar.
+Actualmente Flutter usa datos en memoria para Clientes y Pedidos, con navegación y estado local sencillo compartido desde Home. No hay SQLite, API, PostgreSQL integrado, autenticación real, mapas ni sincronización. Los cambios pueden perderse al recrear Home o la aplicación.
 
 ## 3. Aplicación móvil
 
@@ -49,33 +49,42 @@ Responsabilidades:
 ```text
 lib/
 ├── main.dart
+├── data/
+│   └── sample_data.dart
 ├── models/
 │   ├── client.dart
 │   ├── contact.dart
+│   ├── order.dart
 │   ├── purchase.dart
 │   └── reception_day.dart
 └── screens/
     ├── login_screen.dart
     ├── home_screen.dart
-    └── clients/
-        ├── clients_screen.dart
-        ├── client_form_screen.dart
-        ├── client_detail_screen.dart
-        ├── contact_form_screen.dart
-        └── widgets/
-            └── reception_schedule_editor.dart
+    ├── clients/
+    │   ├── clients_screen.dart
+    │   ├── client_form_screen.dart
+    │   ├── client_detail_screen.dart
+    │   ├── contact_form_screen.dart
+    │   └── widgets/
+    │       └── reception_schedule_editor.dart
+    └── orders/
+        ├── orders_screen.dart
+        ├── order_form_screen.dart
+        └── order_detail_screen.dart
 test/
 ├── widget_test.dart
 ├── models/
 │   ├── client_test.dart
+│   ├── order_test.dart
 │   └── reception_day_test.dart
 └── screens/
-    └── clients_v11_test.dart
+    ├── clients_v11_test.dart
+    └── orders_v1_test.dart
 ```
 
 Mantenerla simple. No introducir arquitectura compleja sin necesidad.
 
-La estructura corresponde a Clientes v1.1 implementado y probado.
+La estructura corresponde a Clientes v1.1 y Pedidos v1 implementados y probados.
 
 ## 5. Modelos
 
@@ -97,13 +106,14 @@ Los modelos no son la base de datos.
 - Cliente aporta ubicación, múltiples contactos, horario y demás información operativa actualizada, aunque la factura física esté incompleta o desactualizada.
 - Pedidos que requieren entrega se utilizarán para planificar rutas; las reglas exactas se definirán antes de implementar Rutas v1, sin fijar estados elegibles todavía.
 - Ruta relacionará pedidos y paradas de entrega, usando información actualizada del cliente. No diseñar Pedidos de forma aislada de Clientes y Rutas.
+- Continúan sin definir la asignación de pedidos, el orden de paradas, la relación con choferes, el inicio y la finalización de rutas, las reprogramaciones y las transiciones automáticas adicionales. Estas decisiones requieren un diseño aprobado de Rutas v1.
 
 Flujo conceptual: Factura física → Pedido en Mi Ruta → Cliente → Ruta → Entrega.
 
 Pedido será principalmente una referencia a la factura física y una unidad operativa para seguimiento, planificación de rutas y entrega. Mi Ruta no reemplaza facturación ni es un sistema completo de ventas. Productos, cantidades, precios, impuestos y demás contenido de la factura quedan fuera del alcance actual, evitando duplicación innecesaria.
 
-### Pedido (diseño aprobado para Pedidos v1)
-Modelo Dart previsto, independiente de widgets Flutter:
+### Pedido (implementado en Pedidos v1)
+Modelo Dart independiente de widgets Flutter:
 - `id`: `String` interno e inmutable, independiente del folio.
 - `invoiceNumber`: folio alfanumérico `String`, obligatorio y sin límite pequeño artificial.
 - `clientId`: `String` que referencia a `Client.id`, sin copiar datos del cliente.
@@ -113,18 +123,18 @@ Modelo Dart previsto, independiente de widgets Flutter:
 - `notes`: observaciones generales opcionales.
 - `postponementReason`: motivo de posposición separado de `notes`.
 
-Estados: Sin ruta, En ruta, Entregado, Pospuesto y Cancelado. Un pedido nuevo inicia automáticamente Sin ruta y su formulario de creación no expone el estado. En ruta queda reservado para la futura integración con Rutas y no será una transición manual en Pedidos v1.
+Estados: Sin ruta, En ruta, Entregado, Pospuesto y Cancelado. Un pedido nuevo inicia automáticamente Sin ruta y su formulario de creación no expone el estado. En ruta queda reservado para la futura integración con Rutas y no es una transición manual en Pedidos v1.
 
-El modelo validará que un Pedido Pospuesto tenga un motivo no vacío. La interfaz solicitará el motivo antes de confirmar, mantendrá las observaciones generales separadas y mostrará claramente el motivo mientras el pedido esté Pospuesto. No se eliminará automáticamente un motivo existente al abandonar Pospuesto; la política definitiva de conservación o historial queda pendiente. No habrá historial complejo de estados o motivos en v1.
+El modelo valida que un Pedido Pospuesto tenga un motivo no vacío. La interfaz solicita el motivo antes de confirmar, mantiene las observaciones generales separadas y muestra claramente el motivo mientras el pedido está Pospuesto. No se elimina automáticamente un motivo existente al abandonar Pospuesto; la política definitiva de conservación o historial queda pendiente. No existe historial complejo de estados o motivos en v1.
 
 El folio no será clave primaria ni identificador interno. En memoria se permitirán folios repetidos y las actualizaciones usarán `Order.id`. La regla definitiva de unicidad se decidirá antes de diseñar la base de datos.
 
 ### Estado compartido temporal
-`HomeScreen` mantendrá temporalmente `List<Client>` y `List<Order>` y entregará las mismas colecciones a Clientes y Pedidos. `Order` guardará solo `clientId`; las pantallas resolverán el cliente actual en la lista compartida. Así, una edición del cliente se reflejará en sus pedidos sin duplicar ubicación, coordenadas, contactos, horario u observaciones.
+`HomeScreen` mantiene temporalmente `List<Client>` y `List<Order>` y entrega las mismas colecciones a Clientes y Pedidos. `Order` guarda solo `clientId`; las pantallas resuelven el cliente actual en la lista compartida. Así, una edición del cliente se refleja en sus pedidos sin duplicar ubicación, coordenadas, contactos, horario u observaciones.
 
-Esta solución será estado local sencillo y únicamente en memoria. No introduce paquetes, singleton, persistencia ni gestión avanzada de estado. Los datos podrán perderse al recrear Home o la aplicación.
+Esta solución es estado local sencillo y únicamente en memoria. No introduce paquetes, singleton, persistencia ni gestión avanzada de estado. Los datos pueden perderse al recrear Home o la aplicación.
 
-Pedidos v1 tendrá listado con búsqueda y filtro, formulario reutilizado para alta/edición, detalle, cambio de estado y navegación al detalle del cliente. No incluirá productos, cantidades, precios, impuestos, inventario, ventas, generación de facturas, historial complejo, Rutas o Entregas.
+Pedidos v1 tiene listado con búsqueda y filtro, formulario reutilizado para alta/edición, detalle, cambio de estado y navegación al detalle del cliente. No incluye productos, cantidades, precios, impuestos, inventario, ventas, generación de facturas, historial complejo, Rutas o Entregas.
 
 `Purchase` representa compras, no Pedidos. Permanece temporalmente junto con su visualización actual, sin ampliar funcionalidad. El historial prioritario futuro será de pedidos/facturas por folio, fecha y estado.
 
@@ -281,7 +291,8 @@ PostgreSQL usaría volúmenes para persistencia.
 - Clientes v1.1: listado, búsqueda, alta, detalle, edición, múltiples contactos y horario estructurado en memoria.
 - Configuración individual y masiva del horario de recepción de entregas.
 - Modelos `Client`, `Contact`, `ReceptionDay` y `Purchase`, con visualización básica de compras de ejemplo.
-- Prueba manual correcta en Android, análisis estático sin problemas y 25 pruebas automatizadas superadas.
+- Modelo `Order` y Pedidos v1 con listado, búsqueda, filtro, alta, detalle, edición, estados y acceso al cliente relacionado, todo en memoria.
+- Prueba manual correcta en Android, análisis estático sin problemas y 38 pruebas automatizadas superadas.
 - Git/GitHub.
 
 ### Preparado
@@ -291,8 +302,7 @@ PostgreSQL usaría volúmenes para persistencia.
 - `mi_ruta_dev`.
 
 ### Pendiente
-- Pedidos v1: referencias operativas a facturas, relación con clientes, estados, consulta e historial.
-- Rutas v1: selección de pedidos que requieren entrega y planificación usando información actualizada del cliente.
+- Rutas v1: siguiente prioridad; su diseño funcional y sus reglas operativas todavía no están definidos.
 - Backend.
 - API.
 - Auth real.
@@ -302,4 +312,4 @@ PostgreSQL usaría volúmenes para persistencia.
 - Routes API.
 - Navigation SDK.
 
-Orden de prioridad: Clientes v1.1 **IMPLEMENTADO** → Pedidos v1 **SIGUIENTE** → Rutas v1 **POSTERIOR** → persistencia, sincronización e integraciones según las etapas definidas. Las tarjetas de Pedidos, Rutas y Entregas aún no implementan esos módulos. No ampliar funcionalidades de compras. Mantener una aplicación ligera para una gama amplia de dispositivos Android compatibles, sin paquetes externos innecesarios ni arquitectura compleja.
+Orden de prioridad: Clientes v1.1 **IMPLEMENTADO** → Pedidos v1 **IMPLEMENTADO** → Rutas v1 **SIGUIENTE** → persistencia, sincronización e integraciones según las etapas definidas. Las tarjetas de Rutas y Entregas aún no implementan esos módulos. No ampliar funcionalidades de compras. Mantener una aplicación ligera para una gama amplia de dispositivos Android compatibles, sin paquetes externos innecesarios ni arquitectura compleja.

@@ -4,9 +4,9 @@
 
 Mi Ruta prioriza seguimiento de pedidos y planificación/ejecución de entregas, no ventas ni facturación. Flujo conceptual: Factura física → Pedido en Mi Ruta → Cliente → Ruta → Entrega.
 
-Implementado: login visual, Home y Clientes v1.1. Clientes incluye listado, búsqueda, alta, detalle, edición, múltiples contactos, ubicación, condiciones comerciales, observaciones y horario estructurado de recepción de entregas. Los datos permanecen únicamente en memoria y pueden perderse al salir o recrear el módulo. Existe visualización básica de compras de ejemplo.
+Implementado: login visual, Home, Clientes v1.1 y Pedidos v1. Clientes incluye listado, búsqueda, alta, detalle, edición, múltiples contactos, ubicación, condiciones comerciales, observaciones y horario estructurado de recepción de entregas. Pedidos incluye listado, búsqueda por folio o cliente, filtro por estado, alta, detalle, edición, cambio manual de los estados permitidos y acceso al cliente relacionado. Home comparte temporalmente ambas colecciones. Los datos permanecen únicamente en memoria y pueden perderse al recrear Home o la aplicación. Existe visualización básica de compras de ejemplo.
 
-Siguiente: Pedidos v1. Posteriormente: Rutas v1 y las etapas de persistencia, sincronización e integraciones. No existe todavía SQLite, conexión con API, autenticación real, mapas, Routes API, Navigation SDK ni sincronización offline. PostgreSQL está preparado, pero no integrado. Clientes v1.1 no agregó dependencias externas, fue probado manualmente en Android, pasó `flutter analyze` y sus 25 pruebas automatizadas.
+Siguiente: Rutas v1, cuyo diseño funcional sigue pendiente. Posteriormente continuarán las etapas de persistencia, sincronización e integraciones. No existe todavía SQLite, conexión con API, autenticación real, mapas, Routes API, Navigation SDK ni sincronización offline. PostgreSQL está preparado, pero no integrado. Clientes v1.1 y Pedidos v1 no agregaron dependencias externas, fueron probados manualmente en Android, pasaron `flutter analyze` y cuentan con 38 pruebas automatizadas superadas.
 
 ## 1. Usuarios y acceso
 
@@ -111,7 +111,7 @@ Ampliaciones suspendidas:
 ### RF-300 Crear pedido
 Un Pedido representa una factura que debe ser atendida o que históricamente fue atendida. Será principalmente una referencia a esa factura física y una unidad operativa para seguimiento, planificación de rutas y entrega, sin duplicar innecesariamente su contenido.
 
-Campos aprobados para Pedidos v1 (no implementado):
+Campos implementados en Pedidos v1:
 - ID interno.
 - Folio de factura alfanumérico (`String`), sin límite pequeño artificial.
 - Cliente relacionado mediante `clientId` (`String`).
@@ -146,7 +146,7 @@ No eliminar automáticamente un motivo existente solo por abandonar Pospuesto. L
 Fuera del alcance actual: captura de productos, cantidades, precios, impuestos y demás conceptos o contenido de la factura. El folio permite localizar la factura física cuando se necesitan esos detalles. Se conserva este identificador para trazabilidad, sin compromiso de implementación.
 
 ### RF-303 Consulta e historial de pedidos/facturas
-Pedidos v1 permitirá:
+Pedidos v1 permite:
 - Listar pedidos.
 - Buscar por folio o cliente.
 - Filtrar por estado.
@@ -155,6 +155,8 @@ Pedidos v1 permitirá:
 - Editar folio, cliente, fechas y observaciones generales sin cambiar el ID.
 - Cambiar manualmente entre los estados permitidos en v1.
 - Acceder desde el detalle del pedido a la información actual del cliente relacionado.
+
+La relación se resuelve mediante `clientId` contra la colección compartida de clientes, sin duplicar sus datos. Las actualizaciones utilizan el ID interno del Pedido, no el folio. Home mantiene temporalmente las colecciones compartidas de Clientes y Pedidos únicamente en memoria.
 
 El historial complejo queda fuera de v1. El folio servirá para localizar la factura física cuando se necesite el detalle oficial de mercancía.
 
@@ -186,6 +188,8 @@ Futuro:
 
 ### RF-500 Generar ruta
 Los pedidos que requieren entrega serán utilizados para planificar rutas. Las reglas exactas de selección se definirán antes de implementar Rutas v1; no se fijan todavía estados específicos elegibles.
+
+También quedan pendientes de diseño la asignación de pedidos, el orden de paradas, la relación con choferes, el inicio y la finalización de rutas, las reprogramaciones y cualquier transición automática adicional. Rutas v1 no está diseñada ni implementada todavía.
 
 Un Pedido pertenece a un Cliente, que proporciona ubicación, contactos, horario y demás información actualizada. Pedidos no debe diseñarse como un módulo aislado de Clientes y Rutas.
 
