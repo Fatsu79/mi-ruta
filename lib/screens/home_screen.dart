@@ -1,9 +1,21 @@
 import 'package:flutter/material.dart';
 
+import '../data/sample_data.dart';
+import '../models/client.dart';
+import '../models/order.dart';
 import 'clients/clients_screen.dart';
+import 'orders/orders_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  late final List<Client> _clients = createSampleClients();
+  late final List<Order> _orders = createSampleOrders();
 
   static const _sections = [
     (label: 'Clientes', icon: Icons.people_outline),
@@ -15,7 +27,16 @@ class HomeScreen extends StatelessWidget {
   void _openSection(BuildContext context, String label) {
     if (label == 'Clientes') {
       Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (context) => const ClientsScreen()),
+        MaterialPageRoute<void>(
+          builder: (context) => ClientsScreen(clients: _clients),
+        ),
+      );
+    } else if (label == 'Pedidos') {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (context) =>
+              OrdersScreen(clients: _clients, orders: _orders),
+        ),
       );
     }
   }

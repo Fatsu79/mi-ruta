@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 
+import '../../data/sample_data.dart';
 import '../../models/client.dart';
-import '../../models/contact.dart';
-import '../../models/purchase.dart';
 import 'client_detail_screen.dart';
 import 'client_form_screen.dart';
 
 class ClientsScreen extends StatefulWidget {
-  const ClientsScreen({super.key});
+  const ClientsScreen({this.clients, super.key});
+
+  final List<Client>? clients;
 
   @override
   State<ClientsScreen> createState() => _ClientsScreenState();
@@ -15,57 +16,14 @@ class ClientsScreen extends StatefulWidget {
 
 class _ClientsScreenState extends State<ClientsScreen> {
   final _searchController = TextEditingController();
-  final List<Client> _clients = [
-    Client(
-      id: '1',
-      commercialName: 'Abarrotes La Esperanza',
-      businessName: 'Comercializadora La Esperanza, S.A. de C.V.',
-      state: 'Jalisco',
-      municipality: 'Guadalajara',
-      address: 'Av. Juárez 120, Centro',
-      latitude: 20.6752,
-      longitude: -103.3476,
-      discount: 5,
-      hasCredit: true,
-      notes: 'Recibe mercancía de lunes a viernes por la mañana.',
-      contacts: const [
-        Contact(
-          name: 'María López',
-          position: 'Compras',
-          phone: '33 1234 5678',
-          email: 'maria@example.com',
-        ),
-      ],
-      purchases: [
-        Purchase(
-          date: DateTime(2026, 8, 15),
-          amount: 2450,
-          invoiceNumber: 'F-1042',
-        ),
-        Purchase(date: DateTime(2026, 7, 28), amount: 1875.50),
-      ],
-    ),
-    Client(
-      id: '2',
-      commercialName: 'Papelería Central',
-      businessName: 'Papelería Central de Occidente',
-      state: 'Jalisco',
-      municipality: 'Zapopan',
-      address: 'Av. Vallarta 850',
-      discount: 0,
-      hasCredit: false,
-      notes: '',
-      contacts: [
-        Contact(
-          name: 'Carlos Ruiz',
-          position: 'Propietario',
-          phone: '33 9876 5432',
-          email: 'carlos@example.com',
-        ),
-      ],
-    ),
-  ];
+  late final List<Client> _clients;
   String _query = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _clients = widget.clients ?? createSampleClients();
+  }
 
   List<Client> get _filteredClients {
     final query = _query.trim().toLowerCase();
