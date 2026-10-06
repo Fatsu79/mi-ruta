@@ -84,7 +84,7 @@ test/
 
 Mantenerla simple. No introducir arquitectura compleja sin necesidad.
 
-La estructura corresponde a Clientes v1.1 y Pedidos v1 implementados y probados.
+La estructura corresponde a Clientes v1.1 y Pedidos v1.1 implementados y probados.
 
 ## 5. Modelos
 
@@ -112,7 +112,7 @@ Flujo conceptual: Factura física → Pedido en Mi Ruta → Cliente → Ruta →
 
 Pedido será principalmente una referencia a la factura física y una unidad operativa para seguimiento, planificación de rutas y entrega. Mi Ruta no reemplaza facturación ni es un sistema completo de ventas. Productos, cantidades, precios, impuestos y demás contenido de la factura quedan fuera del alcance actual, evitando duplicación innecesaria.
 
-### Pedido (implementado en Pedidos v1)
+### Pedido (implementado en Pedidos v1.1)
 Modelo Dart independiente de widgets Flutter:
 - `id`: `String` interno e inmutable, independiente del folio.
 - `invoiceNumber`: folio alfanumérico `String`, obligatorio y sin límite pequeño artificial.
@@ -122,10 +122,15 @@ Modelo Dart independiente de widgets Flutter:
 - `status`: estado del pedido.
 - `notes`: observaciones generales opcionales.
 - `postponementReason`: motivo de posposición separado de `notes`.
+- `cancellationReason`: motivo de cancelación separado de `notes` y `postponementReason`.
 
 Estados: Sin ruta, En ruta, Entregado, Pospuesto y Cancelado. Un pedido nuevo inicia automáticamente Sin ruta y su formulario de creación no expone el estado. En ruta queda reservado para la futura integración con Rutas y no es una transición manual en Pedidos v1.
 
 El modelo valida que un Pedido Pospuesto tenga un motivo no vacío. La interfaz solicita el motivo antes de confirmar, mantiene las observaciones generales separadas y muestra claramente el motivo mientras el pedido está Pospuesto. No se elimina automáticamente un motivo existente al abandonar Pospuesto; la política definitiva de conservación o historial queda pendiente. No existe historial complejo de estados o motivos en v1.
+
+Pedidos v1.1 valida también que un Pedido Cancelado tenga `cancellationReason` no vacío. La interfaz solicita y muestra este motivo de forma independiente. Cancelado es reversible: excluye al pedido de Rutas mientras mantenga ese estado, pero no elimina el registro ni impide corregirlo a otro estado manual permitido. `cancellationReason` se conserva temporalmente al abandonar Cancelado, hasta definir una política de historial.
+
+`Order` no incorpora prioridad Normal/Urgente. La urgencia no cuenta todavía con una clasificación estable y los factores operativos se analizarán al diseñar Rutas.
 
 El folio no será clave primaria ni identificador interno. En memoria se permitirán folios repetidos y las actualizaciones usarán `Order.id`. La regla definitiva de unicidad se decidirá antes de diseñar la base de datos.
 
@@ -134,7 +139,7 @@ El folio no será clave primaria ni identificador interno. En memoria se permiti
 
 Esta solución es estado local sencillo y únicamente en memoria. No introduce paquetes, singleton, persistencia ni gestión avanzada de estado. Los datos pueden perderse al recrear Home o la aplicación.
 
-Pedidos v1 tiene listado con búsqueda y filtro, formulario reutilizado para alta/edición, detalle, cambio de estado y navegación al detalle del cliente. No incluye productos, cantidades, precios, impuestos, inventario, ventas, generación de facturas, historial complejo, Rutas o Entregas.
+Pedidos v1.1 tiene listado con búsqueda y filtro, formulario reutilizado para alta/edición, detalle, cambio de estado y navegación al detalle del cliente. No incluye productos, cantidades, precios, impuestos, inventario, ventas, generación de facturas, historial complejo, Rutas o Entregas.
 
 `Purchase` representa compras, no Pedidos. Permanece temporalmente junto con su visualización actual, sin ampliar funcionalidad. El historial prioritario futuro será de pedidos/facturas por folio, fecha y estado.
 
@@ -225,7 +230,11 @@ Código propio que decide:
 - Cómo utilizar ubicación, contactos y horarios actualizados del cliente.
 - En qué orden realizar las paradas de entrega.
 - Cuándo recalcular.
-- Cómo considerar prioridad y horarios.
+- Cómo considerar ubicación, distancia, horarios de recepción y otros factores operativos definidos.
+
+Contexto confirmado para el futuro diseño: los choferes serán los usuarios operativos principales; podrá haber varias rutas o choferes el mismo día; una ruta normalmente representará la jornada de un chofer y podrá recibir nuevos pedidos durante el día. El origen será normalmente la matriz, aunque podrá ser otra sucursal. El orden no se determinará solo por cercanía y podrá considerar tráfico, incidencias y desvíos cuando existan conectividad e integraciones. Cancelado quedará excluido mientras conserve ese estado y Pospuesto podrá incorporarse posteriormente a otra ruta. Nada de esto implementa todavía Rutas v1.
+
+Confirmar una entrega requerirá en el futuro una fotografía como evidencia. Cámara, almacenamiento de imágenes y Entregas no forman parte de Pedidos v1.1.
 
 ## 11. Offline de rutas
 
@@ -260,6 +269,8 @@ Un usuario puede tener varios roles:
 - Vendedor.
 - Chofer.
 
+Algunos choferes podrán tener permisos administrativos. Un administrador podrá realizar operaciones normales del chofer y gestionar usuarios u otras funciones autorizadas. La pantalla de administración de usuarios requerirá el permiso correspondiente. Usuarios, permisos efectivos y autenticación real siguen sin implementarse.
+
 ## 14. Git
 
 - Rama principal: `main`.
@@ -291,8 +302,8 @@ PostgreSQL usaría volúmenes para persistencia.
 - Clientes v1.1: listado, búsqueda, alta, detalle, edición, múltiples contactos y horario estructurado en memoria.
 - Configuración individual y masiva del horario de recepción de entregas.
 - Modelos `Client`, `Contact`, `ReceptionDay` y `Purchase`, con visualización básica de compras de ejemplo.
-- Modelo `Order` y Pedidos v1 con listado, búsqueda, filtro, alta, detalle, edición, estados y acceso al cliente relacionado, todo en memoria.
-- Prueba manual correcta en Android, análisis estático sin problemas y 38 pruebas automatizadas superadas.
+- Modelo `Order` y Pedidos v1.1 con listado, búsqueda, filtro, alta, detalle, edición, estados, motivos separados de posposición y cancelación y acceso al cliente relacionado, todo en memoria.
+- Pedidos v1 fue probado manualmente en Android; análisis estático sin problemas y 42 pruebas automatizadas superadas tras Pedidos v1.1.
 - Git/GitHub.
 
 ### Preparado
@@ -312,4 +323,4 @@ PostgreSQL usaría volúmenes para persistencia.
 - Routes API.
 - Navigation SDK.
 
-Orden de prioridad: Clientes v1.1 **IMPLEMENTADO** → Pedidos v1 **IMPLEMENTADO** → Rutas v1 **SIGUIENTE** → persistencia, sincronización e integraciones según las etapas definidas. Las tarjetas de Rutas y Entregas aún no implementan esos módulos. No ampliar funcionalidades de compras. Mantener una aplicación ligera para una gama amplia de dispositivos Android compatibles, sin paquetes externos innecesarios ni arquitectura compleja.
+Orden de prioridad: Clientes v1.1 **IMPLEMENTADO** → Pedidos v1.1 **IMPLEMENTADO** → Rutas v1 **SIGUIENTE** → persistencia, sincronización e integraciones según las etapas definidas. Las tarjetas de Rutas y Entregas aún no implementan esos módulos. No ampliar funcionalidades de compras. Mantener una aplicación ligera para una gama amplia de dispositivos Android compatibles, sin paquetes externos innecesarios ni arquitectura compleja.

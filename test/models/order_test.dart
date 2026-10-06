@@ -8,6 +8,7 @@ void main() {
     String clientId = 'client-1',
     OrderStatus status = OrderStatus.withoutRoute,
     String? postponementReason,
+    String? cancellationReason,
   }) => Order(
     id: id,
     invoiceNumber: invoiceNumber,
@@ -15,6 +16,7 @@ void main() {
     invoiceDate: DateTime(2026, 9, 24),
     status: status,
     postponementReason: postponementReason,
+    cancellationReason: cancellationReason,
   );
 
   test('un pedido nuevo inicia Sin ruta', () {
@@ -58,6 +60,34 @@ void main() {
     expect(order.postponementReason, 'Cliente cerrado');
   });
 
+  test('un pedido cancelado requiere un motivo no vacío', () {
+    expect(
+      () => createOrder(status: OrderStatus.cancelled),
+      throwsArgumentError,
+    );
+    expect(
+      () =>
+          createOrder(status: OrderStatus.cancelled, cancellationReason: '   '),
+      throwsArgumentError,
+    );
+  });
+
+  test('motivo de cancelación y observaciones son independientes', () {
+    final order = Order(
+      id: '1',
+      invoiceNumber: 'C50002',
+      clientId: 'client-1',
+      invoiceDate: DateTime(2026, 9, 24),
+      status: OrderStatus.cancelled,
+      notes: 'Observación general',
+      cancellationReason: '  Factura emitida por error  ',
+    );
+
+    expect(order.notes, 'Observación general');
+    expect(order.postponementReason, isNull);
+    expect(order.cancellationReason, 'Factura emitida por error');
+  });
+
   test('conserva el motivo al abandonar Pospuesto', () {
     final postponed = createOrder(
       status: OrderStatus.postponed,
@@ -68,6 +98,18 @@ void main() {
 
     expect(delivered.status, OrderStatus.delivered);
     expect(delivered.postponementReason, 'Recibir la próxima semana');
+  });
+
+  test('permite corregir Cancelado y conserva su motivo', () {
+    final cancelled = createOrder(
+      status: OrderStatus.cancelled,
+      cancellationReason: 'Cancelación capturada por error',
+    );
+
+    final withoutRoute = cancelled.copyWith(status: OrderStatus.withoutRoute);
+
+    expect(withoutRoute.status, OrderStatus.withoutRoute);
+    expect(withoutRoute.cancellationReason, 'Cancelación capturada por error');
   });
 
   test('todos los estados tienen etiqueta de interfaz', () {

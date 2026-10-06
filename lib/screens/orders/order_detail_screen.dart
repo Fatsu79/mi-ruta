@@ -85,10 +85,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     OrderStatus? selected = manualStatuses.contains(_order.status)
         ? _order.status
         : null;
-    var reason = _order.postponementReason ?? '';
+    var postponementReason = _order.postponementReason ?? '';
+    var cancellationReason = _order.cancellationReason ?? '';
     final formKey = GlobalKey<FormState>();
 
-    final result = await showDialog<(OrderStatus, String?)>(
+    final result = await showDialog<(OrderStatus, String?, String?)>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
@@ -123,7 +124,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     const SizedBox(height: 16),
                     TextFormField(
                       key: const Key('postponementReasonField'),
-                      initialValue: reason,
+                      initialValue: postponementReason,
                       maxLines: 3,
                       decoration: const InputDecoration(
                         labelText: 'Motivo de posposición',
@@ -134,7 +135,25 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           value == null || value.trim().isEmpty
                           ? 'Ingresa el motivo de posposición'
                           : null,
-                      onChanged: (value) => reason = value,
+                      onChanged: (value) => postponementReason = value,
+                    ),
+                  ],
+                  if (selected == OrderStatus.cancelled) ...[
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      key: const Key('cancellationReasonField'),
+                      initialValue: cancellationReason,
+                      maxLines: 3,
+                      decoration: const InputDecoration(
+                        labelText: 'Motivo de cancelación',
+                        alignLabelWithHint: true,
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) =>
+                          value == null || value.trim().isEmpty
+                          ? 'Ingresa el motivo de cancelación'
+                          : null,
+                      onChanged: (value) => cancellationReason = value,
                     ),
                   ],
                 ],
@@ -152,7 +171,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 if (!formKey.currentState!.validate()) return;
                 Navigator.of(dialogContext).pop((
                   selected!,
-                  selected == OrderStatus.postponed ? reason.trim() : null,
+                  selected == OrderStatus.postponed
+                      ? postponementReason.trim()
+                      : null,
+                  selected == OrderStatus.cancelled
+                      ? cancellationReason.trim()
+                      : null,
                 ));
               },
               child: const Text('Confirmar'),
@@ -163,9 +187,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     );
     if (result == null || !mounted) return;
 
-    final (status, resultReason) = result;
+    final (status, resultPostponementReason, resultCancellationReason) = result;
     _updateOrder(
-      _order.copyWith(status: status, postponementReason: resultReason),
+      _order.copyWith(
+        status: status,
+        postponementReason: resultPostponementReason,
+        cancellationReason: resultCancellationReason,
+      ),
     );
   }
 
@@ -222,6 +250,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 _Detail(
                   label: 'Motivo de posposición',
                   value: _order.postponementReason!,
+                ),
+              if (_order.status == OrderStatus.cancelled)
+                _Detail(
+                  label: 'Motivo de cancelación',
+                  value: _order.cancellationReason!,
                 ),
             ],
           ),

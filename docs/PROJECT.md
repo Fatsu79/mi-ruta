@@ -43,13 +43,13 @@ Mi Ruta busca centralizar en una sola aplicación:
 ## 3. Usuarios objetivo
 
 ### Administrador
-Puede administrar usuarios, clientes, pedidos, rutas y configuraciones.
+Podrá realizar las operaciones normales del chofer y, con los permisos correspondientes, administrar usuarios y otras funciones autorizadas.
 
 ### Vendedor
 Podrá registrar y consultar clientes, registrar pedidos referenciados por factura, consultar su historial y planificar rutas de entrega.
 
 ### Chofer
-Puede consultar su ruta, clientes asignados, pedidos, ubicaciones, contactos y estado de entregas.
+Será el principal usuario operativo. Podrá crear pedidos, crear y consultar su ruta, revisar clientes, ubicaciones y contactos, y actualizar estados.
 
 > Un mismo usuario puede tener **más de un rol**.
 
@@ -81,15 +81,15 @@ Esta lista no implica que todas las funcionalidades estén implementadas.
 - Horario de lunes a domingo: Sin definir, No recibe o intervalo Desde/Hasta; configuración individual y aplicación masiva a cualquier combinación de días.
 - Validación de intervalos y de una semana con exactamente siete días, sin duplicados ni faltantes.
 - Modelos `Client`, `Contact`, `ReceptionDay` y `Purchase`, con visualización básica de compras de ejemplo.
-- Pedidos v1: listado, búsqueda por folio o cliente, filtro por estado, alta, detalle, edición y cambio manual de los estados permitidos.
-- Modelo `Order` con ID interno independiente, folio alfanumérico, relación con Cliente mediante `clientId`, fechas, estado, observaciones generales y motivo de posposición separado.
+- Pedidos v1.1: listado, búsqueda por folio o cliente, filtro por estado, alta, detalle, edición y cambio manual de los estados permitidos.
+- Modelo `Order` con ID interno independiente, folio alfanumérico, relación con Cliente mediante `clientId`, fechas, estado, observaciones generales y motivos separados de posposición y cancelación.
 - Acceso desde el detalle del Pedido a la información actual del Cliente relacionado.
 - Pedidos nuevos en estado Sin ruta; En ruta es visible y filtrable, pero queda reservado para la futura integración con Rutas y no puede seleccionarse manualmente.
 - Folios repetidos permitidos temporalmente y ausencia deliberada de productos, cantidades, precios, impuestos y contenido detallado de la factura.
 - Home comparte temporalmente las colecciones de Clientes y Pedidos en memoria.
 - Datos y cambios únicamente en memoria; pueden perderse al recrear Home o la aplicación.
 - Sin dependencias externas agregadas para Clientes v1.1 ni Pedidos v1.
-- Implementación probada manualmente en Android; `flutter analyze` sin problemas y 38 pruebas automatizadas superadas.
+- Pedidos v1 fue probado manualmente en Android; `flutter analyze` terminó sin problemas y 42 pruebas automatizadas están superadas tras Pedidos v1.1.
 - Git y GitHub configurados.
 - Clientes v1.1 guardado en Git y GitHub.
 - Pedidos v1 guardado en Git y GitHub.
@@ -105,17 +105,25 @@ Esta lista no implica que todas las funcionalidades estén implementadas.
 
 ### Prioridad del proyecto
 1. **Clientes v1.1 — IMPLEMENTADO.**
-2. **Pedidos v1 — IMPLEMENTADO.** Referencia operativa a una factura, relación con clientes, estados, consulta y edición.
+2. **Pedidos v1.1 — IMPLEMENTADO.** Incluye motivo obligatorio y separado para Cancelado, sin volver irreversible ese estado.
 3. **Rutas v1 — SIGUIENTE.** Su diseño funcional se realizará antes de implementarlo, sin anticipar todavía reglas operativas definitivas.
 4. **Persistencia, sincronización e integraciones.** Según las siguientes etapas definidas en la arquitectura.
 
-Pedidos v1 usa un ID interno independiente, folio alfanumérico, relación por `clientId`, fecha de factura, fecha prevista opcional, estado, observaciones generales y motivo de posposición separado. Los estados son Sin ruta, En ruta, Entregado, Pospuesto y Cancelado. Todo pedido nuevo inicia automáticamente Sin ruta; En ruta queda reservado para la futura integración con Rutas.
+Pedidos usa un ID interno independiente, folio alfanumérico, relación por `clientId`, fecha de factura, fecha prevista opcional, estado, observaciones generales, motivo de posposición y motivo de cancelación separados. Los estados son Sin ruta, En ruta, Entregado, Pospuesto y Cancelado. Todo pedido nuevo inicia automáticamente Sin ruta; En ruta queda reservado para la futura integración con Rutas.
 
 Para cambiar a Pospuesto será obligatorio proporcionar un motivo no vacío, independiente de las observaciones generales, y mostrarlo claramente mientras el pedido permanezca en ese estado. No se eliminará automáticamente un motivo existente al abandonar Pospuesto; la política definitiva para conservarlo o historizarlo se decidirá posteriormente.
+
+Pedidos v1.1 exige también un `cancellationReason` no vacío para cambiar a Cancelado. Este motivo es independiente de `notes` y `postponementReason`. Cancelado excluye al pedido de Rutas únicamente mientras conserve ese estado: la cancelación puede corregirse mediante otra transición manual permitida y el motivo no se elimina automáticamente por ahora.
 
 Temporalmente se permitirán folios repetidos. Siguen pendientes la regla definitiva de unicidad para la futura base de datos, el tratamiento de entregas fallidas y reprogramaciones, las transiciones ligadas a Rutas y las reglas definitivas para seleccionar pedidos al planificar rutas.
 
 Antes de implementar Rutas v1 deberán diseñarse y aprobarse sus reglas de asignación de pedidos, orden de paradas, relación con choferes, inicio y finalización de rutas, reprogramaciones y transiciones automáticas adicionales. Este cierre de Pedidos v1 no define ninguna de esas decisiones.
+
+Como contexto confirmado, podrá haber uno o varios choferes y rutas el mismo día; una ruta normalmente corresponderá al trabajo diario de un chofer y podrá incorporar nuevos pedidos durante la jornada. El origen será normalmente la sucursal matriz, aunque podrá ser otra sucursal. La planificación buscará evitar recorridos innecesarios considerando ubicación, distancia, horarios de recepción y, cuando existan conectividad e integraciones, tráfico e incidencias o desvíos. No se asumirá un simple orden de menor a mayor distancia. Los pedidos Cancelado no serán candidatos mientras mantengan ese estado y los Pospuesto podrán incorporarse posteriormente a otra ruta.
+
+La prioridad Normal/Urgente no forma parte de Pedido. La clasificación de urgencia no está definida y los factores operativos se evaluarán durante el futuro diseño de Rutas.
+
+Confirmar una entrega requerirá en el futuro una fotografía como evidencia, sin implementar todavía cámara, almacenamiento de fotografías ni el módulo Entregas. También existirá administración de usuarios y permisos: algunos choferes podrán tener permisos administrativos y la pantalla de usuarios será visible solo con autorización. Usuarios y autenticación continúan fuera del alcance actual.
 
 `Purchase` permanece temporalmente sin ampliar su funcionalidad. Se suspende el desarrollo de registro de compras, compras recientes e historial completo de compras.
 

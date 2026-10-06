@@ -4,9 +4,9 @@
 
 Mi Ruta prioriza seguimiento de pedidos y planificación/ejecución de entregas, no ventas ni facturación. Flujo conceptual: Factura física → Pedido en Mi Ruta → Cliente → Ruta → Entrega.
 
-Implementado: login visual, Home, Clientes v1.1 y Pedidos v1. Clientes incluye listado, búsqueda, alta, detalle, edición, múltiples contactos, ubicación, condiciones comerciales, observaciones y horario estructurado de recepción de entregas. Pedidos incluye listado, búsqueda por folio o cliente, filtro por estado, alta, detalle, edición, cambio manual de los estados permitidos y acceso al cliente relacionado. Home comparte temporalmente ambas colecciones. Los datos permanecen únicamente en memoria y pueden perderse al recrear Home o la aplicación. Existe visualización básica de compras de ejemplo.
+Implementado: login visual, Home, Clientes v1.1 y Pedidos v1.1. Clientes incluye listado, búsqueda, alta, detalle, edición, múltiples contactos, ubicación, condiciones comerciales, observaciones y horario estructurado de recepción de entregas. Pedidos incluye listado, búsqueda por folio o cliente, filtro por estado, alta, detalle, edición, cambio manual de los estados permitidos, motivos separados para Pospuesto y Cancelado y acceso al cliente relacionado. Home comparte temporalmente ambas colecciones. Los datos permanecen únicamente en memoria y pueden perderse al recrear Home o la aplicación. Existe visualización básica de compras de ejemplo.
 
-Siguiente: Rutas v1, cuyo diseño funcional sigue pendiente. Posteriormente continuarán las etapas de persistencia, sincronización e integraciones. No existe todavía SQLite, conexión con API, autenticación real, mapas, Routes API, Navigation SDK ni sincronización offline. PostgreSQL está preparado, pero no integrado. Clientes v1.1 y Pedidos v1 no agregaron dependencias externas, fueron probados manualmente en Android, pasaron `flutter analyze` y cuentan con 38 pruebas automatizadas superadas.
+Siguiente: Rutas v1, cuyo diseño funcional sigue pendiente. Posteriormente continuarán las etapas de persistencia, sincronización e integraciones. No existe todavía SQLite, conexión con API, autenticación real, mapas, Routes API, Navigation SDK ni sincronización offline. PostgreSQL está preparado, pero no integrado. Clientes v1.1 y Pedidos no agregaron dependencias externas. Pedidos v1 fue probado manualmente en Android; tras Pedidos v1.1, `flutter analyze` no presenta problemas y existen 42 pruebas automatizadas superadas.
 
 ## 1. Usuarios y acceso
 
@@ -20,8 +20,12 @@ Un usuario puede tener uno o varios roles:
 - Vendedor.
 - Chofer.
 
+Los choferes serán los principales usuarios operativos y podrán crear pedidos, crear su ruta y actualizar estados. Algunos choferes podrán contar además con permisos administrativos. Un administrador podrá realizar las operaciones normales del chofer y gestionar usuarios u otras funciones autorizadas.
+
 ### RF-003 Permisos
 Los permisos reales se validarán en backend.
+
+La futura pantalla de administración de usuarios será visible únicamente para quienes tengan los permisos correspondientes. Administración de usuarios y autenticación real no se implementan en Pedidos v1.1.
 
 ## 2. Clientes
 
@@ -111,7 +115,7 @@ Ampliaciones suspendidas:
 ### RF-300 Crear pedido
 Un Pedido representa una factura que debe ser atendida o que históricamente fue atendida. Será principalmente una referencia a esa factura física y una unidad operativa para seguimiento, planificación de rutas y entrega, sin duplicar innecesariamente su contenido.
 
-Campos implementados en Pedidos v1:
+Campos implementados en Pedidos v1.1:
 - ID interno.
 - Folio de factura alfanumérico (`String`), sin límite pequeño artificial.
 - Cliente relacionado mediante `clientId` (`String`).
@@ -119,6 +123,7 @@ Campos implementados en Pedidos v1:
 - Estado.
 - Observaciones generales opcionales (`notes`).
 - Motivo de posposición (`postponementReason`), independiente de las observaciones generales.
+- Motivo de cancelación (`cancellationReason`), independiente de las observaciones generales y del motivo de posposición.
 - Fecha prevista/programada de entrega, cuando corresponda.
 
 El ID interno es independiente del folio. No asumir que el folio es globalmente único ni utilizarlo como clave primaria. Temporalmente se permiten folios repetidos; la regla definitiva de unicidad para la futura base de datos queda pendiente.
@@ -141,6 +146,16 @@ Para cambiar a Pospuesto:
 - Mostrar claramente el motivo mientras el pedido esté Pospuesto.
 
 No eliminar automáticamente un motivo existente solo por abandonar Pospuesto. La política definitiva para conservar o historizar motivos anteriores se decidirá posteriormente. No implementar todavía historial complejo de estados o motivos. El tratamiento de entregas fallidas y reprogramaciones también queda pendiente.
+
+Para cambiar a Cancelado:
+- Solicitar `cancellationReason` antes de confirmar.
+- Rechazar un motivo nulo, vacío o compuesto solo por espacios.
+- Mantener `notes` y `postponementReason` independientes.
+- Mostrar claramente el motivo mientras el pedido esté Cancelado.
+
+Cancelado no elimina el pedido ni impide corregir posteriormente su estado. Mientras permanezca Cancelado no será candidato para Rutas. Al cambiar a otro estado manual permitido podrá volver a ser candidato según las reglas futuras de Rutas. No eliminar automáticamente `cancellationReason` al abandonar Cancelado hasta definir una política de historial.
+
+Las transiciones manuales de Pedidos v1.1 continúan siendo Sin ruta, Entregado, Pospuesto y Cancelado. En ruta permanece reservado para la futura integración con Rutas. No agregar prioridad Normal/Urgente al modelo Pedido.
 
 ### RF-302 Detalle
 Fuera del alcance actual: captura de productos, cantidades, precios, impuestos y demás conceptos o contenido de la factura. El folio permite localizar la factura física cuando se necesitan esos detalles. Se conserva este identificador para trazabilidad, sin compromiso de implementación.
@@ -180,9 +195,10 @@ Objetivo futuro; el tratamiento de intentos fallidos, su registro y la reprogram
 
 Futuro:
 - Firma.
-- Foto.
-- Evidencia.
+- Fotografía obligatoria como evidencia al confirmar una entrega.
 - Coordenadas.
+
+No implementar todavía cámara, almacenamiento de fotografías ni el módulo Entregas.
 
 ## 6. Rutas
 
@@ -191,13 +207,24 @@ Los pedidos que requieren entrega serán utilizados para planificar rutas. Las r
 
 También quedan pendientes de diseño la asignación de pedidos, el orden de paradas, la relación con choferes, el inicio y la finalización de rutas, las reprogramaciones y cualquier transición automática adicional. Rutas v1 no está diseñada ni implementada todavía.
 
+Contexto operativo confirmado para su futuro diseño:
+- Los choferes serán los principales usuarios operativos y podrán crear pedidos, crear su ruta y actualizar estados.
+- Podrá haber uno o varios choferes y rutas en un mismo día.
+- Una ruta normalmente corresponderá al trabajo diario de un chofer.
+- Un pedido nuevo podrá incorporarse a la ruta existente del chofer durante el día.
+- El punto inicial será normalmente la sucursal matriz, pero podrá ser otra sucursal.
+- La planificación buscará evitar recorridos innecesarios considerando ubicación, distancia y horario de recepción y, cuando existan conectividad e integraciones, tráfico, incidencias y desvíos.
+- No se asumirá que el orden correcto sea siempre del punto más cercano al más lejano.
+- Los pedidos Cancelado no serán candidatos mientras conserven ese estado.
+- Los pedidos Pospuesto podrán incorporarse posteriormente a otra ruta.
+
 Un Pedido pertenece a un Cliente, que proporciona ubicación, contactos, horario y demás información actualizada. Pedidos no debe diseñarse como un módulo aislado de Clientes y Rutas.
 
 Considerar:
 - Ubicación actual.
 - Pedidos que requieren entrega y su estado.
 - Ubicación, contactos y horario de recepción del cliente.
-- Prioridades cuando se definan.
+- Factores operativos adicionales cuando se definan; no existe todavía prioridad Normal/Urgente en Pedido.
 - Tráfico y condiciones de ruta cuando exista conexión.
 - Entregas completadas.
 

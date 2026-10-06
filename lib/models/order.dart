@@ -20,10 +20,12 @@ class Order {
     this.status = OrderStatus.withoutRoute,
     String notes = '',
     String? postponementReason,
+    String? cancellationReason,
   }) : invoiceNumber = invoiceNumber.trim(),
        clientId = clientId.trim(),
        notes = notes.trim(),
-       postponementReason = postponementReason?.trim() {
+       postponementReason = postponementReason?.trim(),
+       cancellationReason = cancellationReason?.trim() {
     if (id.trim().isEmpty) {
       throw ArgumentError('El ID es obligatorio');
     }
@@ -37,6 +39,10 @@ class Order {
         (this.postponementReason == null || this.postponementReason!.isEmpty)) {
       throw ArgumentError('Un pedido pospuesto requiere un motivo');
     }
+    if (status == OrderStatus.cancelled &&
+        (this.cancellationReason == null || this.cancellationReason!.isEmpty)) {
+      throw ArgumentError('Un pedido cancelado requiere un motivo');
+    }
   }
 
   final String id;
@@ -47,6 +53,7 @@ class Order {
   final OrderStatus status;
   final String notes;
   final String? postponementReason;
+  final String? cancellationReason;
 
   Order copyWith({
     String? invoiceNumber,
@@ -57,6 +64,7 @@ class Order {
     OrderStatus? status,
     String? notes,
     String? postponementReason,
+    String? cancellationReason,
   }) => Order(
     id: id,
     invoiceNumber: invoiceNumber ?? this.invoiceNumber,
@@ -68,5 +76,6 @@ class Order {
     status: status ?? this.status,
     notes: notes ?? this.notes,
     postponementReason: postponementReason ?? this.postponementReason,
+    cancellationReason: cancellationReason ?? this.cancellationReason,
   );
 }

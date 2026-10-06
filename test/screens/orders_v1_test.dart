@@ -38,6 +38,7 @@ void main() {
     OrderStatus status = OrderStatus.withoutRoute,
     String notes = '',
     String? postponementReason,
+    String? cancellationReason,
   }) => Order(
     id: id,
     invoiceNumber: invoiceNumber,
@@ -46,6 +47,7 @@ void main() {
     status: status,
     notes: notes,
     postponementReason: postponementReason,
+    cancellationReason: cancellationReason,
   );
 
   testWidgets('muestra, busca y filtra pedidos por estado', (tester) async {
@@ -219,6 +221,60 @@ void main() {
       find.text('Motivo de posposición: Cliente solicitó otra fecha'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('exige motivo para Cancelado y permite corregir el estado', (
+    tester,
+  ) async {
+    Order? updated;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: OrderDetailScreen(
+          order: order(notes: 'No copiar el motivo aquí'),
+          clients: clients,
+          onOrderUpdated: (value) => updated = value,
+          onClientsChanged: () {},
+        ),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('changeOrderStatusButton')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('changeOrderStatusDropdown')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cancelado').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('confirmOrderStatusButton')));
+    await tester.pump();
+    expect(find.text('Ingresa el motivo de cancelación'), findsOneWidget);
+
+    await tester.enterText(
+      find.byKey(const Key('cancellationReasonField')),
+      'Factura capturada por error',
+    );
+    await tester.tap(find.byKey(const Key('confirmOrderStatusButton')));
+    await tester.pumpAndSettle();
+
+    expect(updated?.status, OrderStatus.cancelled);
+    expect(updated?.notes, 'No copiar el motivo aquí');
+    expect(updated?.postponementReason, isNull);
+    expect(updated?.cancellationReason, 'Factura capturada por error');
+    expect(
+      find.text('Motivo de cancelación: Factura capturada por error'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const Key('changeOrderStatusButton')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('changeOrderStatusDropdown')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Sin ruta').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('confirmOrderStatusButton')));
+    await tester.pumpAndSettle();
+
+    expect(updated?.status, OrderStatus.withoutRoute);
+    expect(updated?.cancellationReason, 'Factura capturada por error');
   });
 
   testWidgets('abre el detalle del cliente relacionado', (tester) async {
